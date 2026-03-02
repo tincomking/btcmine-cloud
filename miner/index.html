@@ -11,27 +11,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="btc-icon">B</div>
-        <span>BTC Mine <span class="highlight">Miner Calc</span></span>
-      </div>
-      <nav class="header-nav">
-        <a href="https://cloud.btcmine.info">Cloud</a>
-        <a href="https://minersell.btcmine.info">Miner Sell</a>
-        <a href="https://user.btcmine.info">User Calc</a>
-        <a href="https://miner.btcmine.info" class="active">Miner Calc</a>
-        <a href="https://cal.btcmine.info">Platform</a>
-        <a href="https://btcmine.info">Analytics</a>
-      </nav>
-      <div class="btc-ticker">
-        <span>BTC</span>
-        <span class="price" id="btcPrice">--</span>
-      </div>
-    </div>
-  </header>
-
   <main class="container">
     <section class="hero fade-in">
       <h1>Miner Profitability Calculator</h1>
@@ -196,7 +175,9 @@
   </footer>
 
   <script src="/shared/pricing.js"></script>
+  <script src="/shared/nav.js"></script>
   <script>
+    Nav.render('miner');
     let elecChart = null;
 
     async function init() {
@@ -205,7 +186,6 @@
       calculate();
       setInterval(async () => {
         await PricingEngine.fetchBTCPrice();
-        document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
       }, 60000);
     }
 
@@ -234,7 +214,6 @@
       const roiDays = dailyProfit > 0 ? Math.ceil(i.totalInvestment / dailyProfit) : Infinity;
 
       // Stats
-      document.getElementById('btcPrice').textContent = '$' + i.btcPrice.toLocaleString();
       document.getElementById('totalHashrate').textContent = (i.totalTH / 1000).toFixed(1) + ' PH/s';
       document.getElementById('totalPower').textContent = (i.totalWatts / 1000).toFixed(1);
       document.getElementById('dailyRevenue').textContent = PricingEngine.fmt.usd(dailyRevenue);
@@ -318,7 +297,7 @@
             label: '日利润 ($)',
             data: profits,
             backgroundColor: profits.map(p => p >= 0 ? 'rgba(16,185,129,0.6)' : 'rgba(239,68,68,0.6)'),
-            borderColor: profits.map(p => p >= 0 ? '#10b981' : '#ef4444'),
+            borderColor: profits.map(p => p >= 0 ? '#00d672' : '#ff4d4d'),
             borderWidth: 1,
           }]
         },
@@ -326,8 +305,8 @@
           responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', callback: v => '$' + v.toFixed(0) } },
-            x: { grid: { display: false }, ticks: { color: '#9ca3af' } },
+            y: { grid: { color: '#1a1a1a' }, ticks: { color: '#555555', callback: v => '$' + v.toFixed(0) } },
+            x: { grid: { display: false }, ticks: { color: '#555555' } },
           }
         }
       });

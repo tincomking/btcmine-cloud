@@ -9,19 +9,6 @@
   <link rel="stylesheet" href="/shared/style.css">
 </head>
 <body>
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="btc-icon">B</div>
-        <span>BTC Mine <span class="highlight">Platform</span></span>
-      </div>
-      <div class="btc-ticker">
-        <span>BTC</span>
-        <span class="price" id="btcPrice">--</span>
-      </div>
-    </div>
-  </header>
-
   <main class="container">
     <section class="hero fade-in">
       <h1>BTC Mine Cloud Platform</h1>
@@ -67,11 +54,7 @@
   </footer>
 
   <script src="/shared/pricing.js"></script>
-  <script>
-    (async () => {
-      await PricingEngine.fetchBTCPrice();
-      document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
-    })();
-  </script>
+  <script src="/shared/nav.js"></script>
+  <script>Nav.render('home');</script>
 </body>
 </html>

@@ -10,59 +10,19 @@
   <link rel="stylesheet" href="/shared/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    .winner-box {
-      padding: 20px; border-radius: var(--radius-xl); text-align: center;
-      margin: 24px 0; font-size: 1.1rem; font-weight: 600;
-    }
-    .winner-box.mining { background: var(--green-dim); border: 2px solid var(--green); color: var(--green); }
-    .winner-box.spot { background: var(--blue-dim); border: 2px solid var(--blue); color: var(--blue); }
-    .winner-box .big { font-size: 2rem; font-weight: 800; font-family: var(--font-mono); }
-    .invest-input {
-      text-align: center; margin: 20px 0;
-    }
-    .invest-input input {
-      font-size: 2rem; text-align: center; max-width: 300px;
-      font-weight: 700; background: var(--bg-input); border: 2px solid var(--accent);
-    }
-    .invest-input label {
-      display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;
-    }
     .method-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-xl); padding: 24px;
+      background: var(--bg-1); border: 1px solid var(--border-1);
+      border-radius: var(--radius-xl); padding: 28px;
     }
     .method-card h3 {
-      font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
     }
-    .method-card h3 .dot {
-      width: 12px; height: 12px; border-radius: 50%;
-    }
+    .method-card h3 .dot { width: 10px; height: 10px; border-radius: 50%; }
     .dot-mining { background: var(--green); }
     .dot-spot { background: var(--blue); }
   </style>
 </head>
 <body>
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="btc-icon">B</div>
-        <span>BTC Mine <span class="highlight">User Calc</span></span>
-      </div>
-      <nav class="header-nav">
-        <a href="https://cloud.btcmine.info">Cloud</a>
-        <a href="https://minersell.btcmine.info">Miner Sell</a>
-        <a href="https://user.btcmine.info" class="active">User Calc</a>
-        <a href="https://miner.btcmine.info">Miner Calc</a>
-        <a href="https://cal.btcmine.info">Platform</a>
-        <a href="https://btcmine.info">Analytics</a>
-      </nav>
-      <div class="btc-ticker">
-        <span>BTC</span>
-        <span class="price" id="btcPrice">--</span>
-      </div>
-    </div>
-  </header>
-
   <main class="container">
     <section class="hero fade-in">
       <h1>Cloud Mining vs Spot BTC</h1>
@@ -210,7 +170,9 @@
   </footer>
 
   <script src="/shared/pricing.js"></script>
+  <script src="/shared/nav.js"></script>
   <script>
+    Nav.render('user');
     let chart = null;
 
     async function init() {
@@ -218,7 +180,6 @@
       calculate();
       setInterval(async () => {
         await PricingEngine.fetchBTCPrice();
-        document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
       }, 60000);
     }
 
@@ -235,8 +196,6 @@
 
     function calculate() {
       const i = getInputs();
-      document.getElementById('btcPrice').textContent = '$' + i.currentBtc.toLocaleString();
-
       // 用户投资金额换算可购买的算力
       // 先算 10TH/s 的总成本，然后按比例
       const base = PricingEngine.calculatePricing(10, i.period, i.elec, i.miner);
@@ -332,14 +291,14 @@
             {
               label: '云挖矿 ROI%',
               data: miningROIs,
-              borderColor: '#10b981',
+              borderColor: '#00d672',
               backgroundColor: 'rgba(16,185,129,0.1)',
               fill: true, tension: 0.3, pointRadius: 0,
             },
             {
               label: '直接买 BTC ROI%',
               data: spotROIs,
-              borderColor: '#3b82f6',
+              borderColor: '#4da6ff',
               backgroundColor: 'rgba(59,130,246,0.1)',
               fill: true, tension: 0.3, pointRadius: 0,
             },
@@ -349,15 +308,15 @@
           responsive: true, maintainAspectRatio: false,
           interaction: { intersect: false, mode: 'index' },
           plugins: {
-            legend: { labels: { color: '#9ca3af' } },
+            legend: { labels: { color: '#555555' } },
             tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%' } },
           },
           scales: {
             y: {
-              grid: { color: '#1f2937' },
-              ticks: { color: '#9ca3af', callback: v => v + '%' },
+              grid: { color: '#1a1a1a' },
+              ticks: { color: '#555555', callback: v => v + '%' },
             },
-            x: { grid: { display: false }, ticks: { color: '#9ca3af', maxTicksLimit: 10 } },
+            x: { grid: { display: false }, ticks: { color: '#555555', maxTicksLimit: 10 } },
           },
         }
       });

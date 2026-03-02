@@ -8,90 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/shared/style.css">
-  <style>
-    .hero-badges {
-      display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap;
-    }
-    .hero-badge {
-      padding: 6px 16px; border-radius: 999px; font-size: 0.8rem; font-weight: 500;
-      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
-    }
-    .order-config { margin: 32px 0; }
-    .config-panel {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-xl); padding: 32px;
-    }
-    .hashrate-display {
-      text-align: center; margin: 20px 0;
-    }
-    .hashrate-display .big {
-      font-size: 3rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent);
-    }
-    .hashrate-display .unit {
-      font-size: 1rem; color: var(--text-muted);
-    }
-    .cost-breakdown {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;
-    }
-    .cost-col h3 {
-      font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .halving-banner {
-      background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(245,158,11,0.1));
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: var(--radius-lg); padding: 16px 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 32px;
-    }
-    .halving-banner .text { font-size: 0.9rem; color: var(--text-secondary); }
-    .halving-banner .countdown {
-      font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--red);
-    }
-    .faq { margin: 40px 0; }
-    .faq-item {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); margin-bottom: 8px; overflow: hidden;
-    }
-    .faq-q {
-      padding: 16px 20px; cursor: pointer; font-weight: 600; font-size: 0.95rem;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .faq-q::after { content: '+'; font-size: 1.2rem; color: var(--text-muted); }
-    .faq-item.open .faq-q::after { content: '-'; }
-    .faq-a {
-      padding: 0 20px 16px; color: var(--text-secondary); font-size: 0.9rem;
-      display: none; line-height: 1.8;
-    }
-    .faq-item.open .faq-a { display: block; }
-    @media (max-width: 768px) {
-      .cost-breakdown { grid-template-columns: 1fr; }
-    }
-  </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="btc-icon">B</div>
-        <span>BTC Mine <span class="highlight">Cloud</span></span>
-      </div>
-      <nav class="header-nav">
-        <a href="https://cloud.btcmine.info" class="active">Cloud</a>
-        <a href="https://minersell.btcmine.info">Miner Sell</a>
-        <a href="https://user.btcmine.info">User Calc</a>
-        <a href="https://miner.btcmine.info">Miner Calc</a>
-        <a href="https://cal.btcmine.info">Platform</a>
-        <a href="https://btcmine.info">Analytics</a>
-      </nav>
-      <div class="btc-ticker">
-        <span>BTC</span>
-        <span class="price" id="btcPrice">--</span>
-      </div>
-    </div>
-  </header>
-
   <main class="container">
     <!-- Hero -->
     <section class="hero fade-in">
@@ -319,7 +237,10 @@
   </div>
 
   <script src="/shared/pricing.js"></script>
+  <script src="/shared/nav.js"></script>
   <script>
+    Nav.render('cloud');
+
     // State
     let currentPeriod = 180;
     let currentHashrate = 100;
@@ -349,7 +270,6 @@
       const netHash = PricingEngine.liveData.networkHashrateEH;
       const dailyBtc = PricingEngine.dailyBTCPerTH() * 10;
 
-      document.getElementById('btcPrice').textContent = '$' + price.toLocaleString();
       document.getElementById('statBtcPrice').textContent = '$' + price.toLocaleString();
       document.getElementById('statHashprice').textContent = '$' + hp.toFixed(4);
       document.getElementById('statNetHash').textContent = netHash.toFixed(0);
@@ -487,7 +407,7 @@
           <li><span class="label">合约期</span><span class="val">${currentPeriod} 天</span></li>
           <li><span class="label">矿机型号</span><span class="val">${miner.name}</span></li>
           <li><span class="label">能效比</span><span class="val">${miner.efficiency} J/TH</span></li>
-          <li style="border-top:2px solid var(--border);padding-top:12px;">
+          <li style="border-top:2px solid var(--border-2);padding-top:12px;">
             <span class="label">算力费（一次性）</span><span class="val accent">${PricingEngine.fmt.usd(p.user.hashrateFee)}</span>
           </li>
           <li><span class="label">日电费/服务费</span><span class="val">${PricingEngine.fmt.usd(p.user.electricityFeeDaily)}</span></li>
