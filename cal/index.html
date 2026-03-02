@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Mine - 平台经济模型</title>
+  <meta name="description" content="BTC Mine 云算力平台三方博弈定价模型与经济分析。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .flow-diagram {
+      display: grid; grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 16px; align-items: center; margin: 32px 0;
+    }
+    .flow-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px; text-align: center;
+    }
+    .flow-box h3 { margin-bottom: 12px; font-size: 1.1rem; }
+    .flow-arrow {
+      text-align: center; color: var(--accent); font-size: 1.5rem; font-weight: 800;
+    }
+    .flow-arrow .label { font-size: 0.7rem; color: var(--text-muted); display: block; }
+    .param-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px; margin-bottom: 24px;
+    }
+    .param-section h3 { margin-bottom: 16px; font-size: 1rem; }
+    .profit-highlight {
+      background: linear-gradient(135deg, var(--accent-dim), var(--green-dim));
+      border: 2px solid var(--accent); border-radius: var(--radius-xl);
+      padding: 32px; text-align: center; margin: 24px 0;
+    }
+    .profit-highlight .big {
+      font-size: 3rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent);
+    }
+    .three-col {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0;
+    }
+    @media (max-width: 768px) {
+      .flow-diagram { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); }
+      .three-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="btc-icon">B</div>
+        <span>BTC Mine <span class="highlight">Platform</span></span>
+      </div>
+      <nav class="header-nav">
+        <a href="https://cloud.btcmine.info">Cloud</a>
+        <a href="https://minersell.btcmine.info">Miner Sell</a>
+        <a href="https://user.btcmine.info">User Calc</a>
+        <a href="https://miner.btcmine.info">Miner Calc</a>
+        <a href="https://cal.btcmine.info" class="active">Platform</a>
+        <a href="https://btcmine.info">Analytics</a>
+      </nav>
+      <div class="btc-ticker">
+        <span>BTC</span>
+        <span class="price" id="btcPrice">--</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero fade-in">
+      <h1>Platform Economics</h1>
+      <p class="subtitle">三方博弈定价模型 — 矿工、平台、用户的均衡定价与利润分析。</p>
+    </section>
+
+    <!-- Money Flow Diagram -->
+    <div class="flow-diagram fade-in">
+      <div class="flow-box" style="border-color:var(--green);">
+        <h3 style="color:var(--green);">Miner</h3>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">提供算力</div>
+        <div style="font-family:var(--font-mono);font-size:1.2rem;margin-top:8px;" id="flowMinerRevenue">--</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">收入 (含溢价)</div>
+      </div>
+      <div class="flow-arrow">
+        <div>&larr; $</div>
+        <span class="label">收购价</span>
+      </div>
+      <div class="flow-box" style="border-color:var(--accent);">
+        <h3 style="color:var(--accent);">Platform</h3>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">撮合 + 运维</div>
+        <div style="font-family:var(--font-mono);font-size:1.2rem;margin-top:8px;color:var(--accent);" id="flowPlatformProfit">--</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">利润</div>
+      </div>
+      <div class="flow-arrow">
+        <div>$ &rarr;</div>
+        <span class="label">售价</span>
+      </div>
+      <div class="flow-box" style="border-color:var(--blue);">
+        <h3 style="color:var(--blue);">User</h3>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">购买算力</div>
+        <div style="font-family:var(--font-mono);font-size:1.2rem;margin-top:8px;" id="flowUserCost">--</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">总支出</div>
+      </div>
+    </div>
+
+    <!-- Platform Parameters -->
+    <div class="param-section fade-in">
+      <h3>平台参数调节</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>算力佣金率 (%)</label>
+          <input type="number" id="commRate" value="8" min="1" max="30" step="0.5">
+        </div>
+        <div class="form-group">
+          <label>电费服务费率 (%)</label>
+          <input type="number" id="elecMarkup" value="12" min="1" max="30" step="1">
+        </div>
+        <div class="form-group">
+          <label>矿工基础溢价 (%)</label>
+          <input type="number" id="minerPremium" value="5" min="0" max="20" step="0.5">
+        </div>
+        <div class="form-group">
+          <label>基准电费 ($/kWh)</label>
+          <input type="number" id="baseElec" value="0.06" min="0.01" max="0.20" step="0.01">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>模拟交易量 (TH/s)</label>
+          <input type="number" id="simVolume" value="10000" min="100" step="100">
+        </div>
+        <div class="form-group">
+          <label>模拟合约期 (天)</label>
+          <select id="simPeriod">
+            <option value="30">30 天</option>
+            <option value="90" selected>90 天</option>
+            <option value="180">180 天</option>
+            <option value="360">360 天</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>矿机型号</label>
+          <select id="simMiner">
+            <option value="s21xp" selected>S21 XP (13.5 J/TH)</option>
+            <option value="s21xp_hyd">S21 XP Hyd (12.0 J/TH)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Profit Highlight -->
+    <div class="profit-highlight fade-in">
+      <div style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:8px;">平台总利润（单期）</div>
+      <div class="big" id="platformTotalProfit">--</div>
+      <div style="font-size:0.9rem;color:var(--text-muted);margin-top:8px;" id="platformMarginText">--</div>
+    </div>
+
+    <!-- Three-party Breakdown -->
+    <div class="three-col fade-in">
+      <!-- Miner -->
+      <div class="card" style="border-top:3px solid var(--green);">
+        <div class="card-header"><h2 style="color:var(--green);">Miner 账本</h2></div>
+        <ul class="breakdown" id="minerBreakdown"></ul>
+      </div>
+      <!-- Platform -->
+      <div class="card" style="border-top:3px solid var(--accent);">
+        <div class="card-header"><h2 style="color:var(--accent);">Platform 账本</h2></div>
+        <ul class="breakdown" id="platformBreakdown"></ul>
+      </div>
+      <!-- User -->
+      <div class="card" style="border-top:3px solid var(--blue);">
+        <div class="card-header"><h2 style="color:var(--blue);">User 账本</h2></div>
+        <ul class="breakdown" id="userBreakdown"></ul>
+      </div>
+    </div>
+
+    <!-- Revenue Pie -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;" class="fade-in">
+      <div class="card">
+        <div class="card-header"><h2>用户支出分配</h2></div>
+        <div style="height:300px;"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>佣金率敏感性</h2></div>
+        <div style="height:300px;"><canvas id="commChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Unit Economics Table -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>各合约期单位经济学</h2>
+        <span class="badge badge-amber">per TH/s/day</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>合约期</th>
+              <th>Hashprice</th>
+              <th>矿工溢价</th>
+              <th>矿工收购价</th>
+              <th>用户售价</th>
+              <th>用户电费</th>
+              <th>用户日总成本</th>
+              <th>平台日利润/TH</th>
+            </tr>
+          </thead>
+          <tbody id="unitEconBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Scale Model -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>规模化利润模型</h2>
+        <span class="badge badge-green">月度预测</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+        假设每月持续有新合约签订，不同交易量下的平台月利润：
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>月交易量 (TH)</th>
+              <th>月营收</th>
+              <th>支付矿工</th>
+              <th>电费差价利润</th>
+              <th>月净利润</th>
+              <th>年化利润</th>
+            </tr>
+          </thead>
+          <tbody id="scaleBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Game Theory Section -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>博弈论分析</h2>
+        <span class="badge badge-purple">Equilibrium</span>
+      </div>
+      <div id="gameTheory"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://btcmine.info">Analytics</a>
+      <a href="https://cloud.btcmine.info">Cloud</a>
+      <a href="https://minersell.btcmine.info">Miner Sell</a>
+    </div>
+    <p>&copy; 2026 BTC Mine. All rights reserved.</p>
+  </footer>
+
+  <script src="/shared/pricing.js"></script>
+  <script>
+    let pieChart = null, commChart = null;
+
+    async function init() {
+      await PricingEngine.fetchBTCPrice();
+      calculate();
+      setInterval(async () => {
+        await PricingEngine.fetchBTCPrice();
+        document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
+      }, 60000);
+    }
+
+    function getInputs() {
+      return {
+        commRate: parseFloat(document.getElementById('commRate').value) / 100,
+        elecMarkup: parseFloat(document.getElementById('elecMarkup').value) / 100,
+        minerPremium: parseFloat(document.getElementById('minerPremium').value) / 100,
+        baseElec: parseFloat(document.getElementById('baseElec').value),
+        volume: parseInt(document.getElementById('simVolume').value),
+        period: parseInt(document.getElementById('simPeriod').value),
+        miner: document.getElementById('simMiner').value,
+      };
+    }
+
+    function calculate() {
+      const i = getInputs();
+      const btcPrice = PricingEngine.liveData.btcPrice;
+      document.getElementById('btcPrice').textContent = '$' + btcPrice.toLocaleString();
+
+      // Temporarily override platform params for simulation
+      const origComm = PricingEngine.PLATFORM.hashrateCommission;
+      const origElec = PricingEngine.PLATFORM.electricityMarkup;
+      const origPrem = PricingEngine.PLATFORM.minerPremiumBase;
+      PricingEngine.PLATFORM.hashrateCommission = i.commRate;
+      PricingEngine.PLATFORM.electricityMarkup = i.elecMarkup;
+      PricingEngine.PLATFORM.minerPremiumBase = i.minerPremium;
+
+      const p = PricingEngine.calculatePricing(i.volume, i.period, i.baseElec, i.miner);
+
+      // Restore
+      PricingEngine.PLATFORM.hashrateCommission = origComm;
+      PricingEngine.PLATFORM.electricityMarkup = origElec;
+      PricingEngine.PLATFORM.minerPremiumBase = origPrem;
+
+      // Flow diagram
+      document.getElementById('flowMinerRevenue').textContent = PricingEngine.fmt.usd(p.miner.totalRevenue);
+      document.getElementById('flowPlatformProfit').textContent = PricingEngine.fmt.usd(p.platform.totalProfit);
+      document.getElementById('flowUserCost').textContent = PricingEngine.fmt.usd(p.user.totalCost);
+
+      // Platform profit
+      document.getElementById('platformTotalProfit').textContent = PricingEngine.fmt.usd(p.platform.totalProfit);
+      document.getElementById('platformMarginText').textContent =
+        `利润率 ${(p.platform.profitMargin*100).toFixed(2)}% | 算力差价 ${PricingEngine.fmt.usd(p.platform.hashrateProfit)} + 电费服务费 ${PricingEngine.fmt.usd(p.platform.elecProfit)}`;
+
+      // Miner breakdown
+      const selfMiningRev = PricingEngine.hashprice() * i.volume * i.period;
+      const minerElec = PricingEngine.electricityCostPerTH(i.baseElec, PricingEngine.getMiner(i.miner).efficiency) * i.volume * i.period;
+      document.getElementById('minerBreakdown').innerHTML = `
+        <li><span class="label">出售总收入</span><span class="val green">${PricingEngine.fmt.usd(p.miner.totalRevenue)}</span></li>
+        <li><span class="label">自挖等效收入</span><span class="val">${PricingEngine.fmt.usd(selfMiningRev)}</span></li>
+        <li><span class="label">溢价率</span><span class="val green">+${(p.miner.premium*100).toFixed(1)}%</span></li>
+        <li><span class="label">额外收益</span><span class="val green">+${PricingEngine.fmt.usd(p.miner.extraProfit)}</span></li>
+        <li><span class="label">电费（用户承担）</span><span class="val">${PricingEngine.fmt.usd(minerElec)}</span></li>
+      `;
+
+      // Platform breakdown
+      document.getElementById('platformBreakdown').innerHTML = `
+        <li><span class="label">用户算力费收入</span><span class="val">${PricingEngine.fmt.usd(p.user.hashrateFee)}</span></li>
+        <li><span class="label">支付矿工</span><span class="val red">-${PricingEngine.fmt.usd(p.miner.totalRevenue)}</span></li>
+        <li><span class="label">算力差价利润</span><span class="val green">${PricingEngine.fmt.usd(p.platform.hashrateProfit)}</span></li>
+        <li><span class="label">电费服务费收入</span><span class="val">${PricingEngine.fmt.usd(p.user.electricityFee)}</span></li>
+        <li><span class="label">实际电费支出</span><span class="val red">-${PricingEngine.fmt.usd(minerElec)}</span></li>
+        <li><span class="label">电费服务费利润</span><span class="val green">${PricingEngine.fmt.usd(p.platform.elecProfit)}</span></li>
+        <li><span class="label">总利润</span><span class="val accent">${PricingEngine.fmt.usd(p.platform.totalProfit)}</span></li>
+      `;
+
+      // User breakdown
+      const btcValue = p.network.totalBTCValue;
+      document.getElementById('userBreakdown').innerHTML = `
+        <li><span class="label">算力费（一次性）</span><span class="val">${PricingEngine.fmt.usd(p.user.hashrateFee)}</span></li>
+        <li><span class="label">电费/服务费</span><span class="val">${PricingEngine.fmt.usd(p.user.electricityFee)}</span></li>
+        <li><span class="label">总支出</span><span class="val accent">${PricingEngine.fmt.usd(p.user.totalCost)}</span></li>
+        <li><span class="label">产出 BTC</span><span class="val">${PricingEngine.fmt.btc(p.network.totalBTC)}</span></li>
+        <li><span class="label">BTC 当前价值</span><span class="val">${PricingEngine.fmt.usd(btcValue)}</span></li>
+        <li><span class="label">ROI</span><span class="val ${p.user.roi>=0?'green':'red'}">${(p.user.roi*100).toFixed(2)}%</span></li>
+        <li><span class="label">盈亏平衡价</span><span class="val">${PricingEngine.fmt.usd(p.user.breakEvenBTC, 0)}</span></li>
+      `;
+
+      updatePieChart(p, minerElec);
+      updateCommChart(i);
+      updateUnitEcon(i);
+      updateScaleModel(i);
+      updateGameTheory(p, i);
+    }
+
+    function updatePieChart(p, minerElec) {
+      const ctx = document.getElementById('pieChart');
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['矿工收入', '平台算力利润', '实际电费', '平台电费利润'],
+          datasets: [{
+            data: [p.miner.totalRevenue, p.platform.hashrateProfit, minerElec, p.platform.elecProfit],
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 12 } },
+            tooltip: { callbacks: { label: c => c.label + ': $' + c.raw.toLocaleString(undefined, {maximumFractionDigits:2}) } },
+          },
+        }
+      });
+    }
+
+    function updateCommChart(inputs) {
+      const rates = [3, 5, 8, 10, 12, 15, 20];
+      const profits = rates.map(r => {
+        const orig = PricingEngine.PLATFORM.hashrateCommission;
+        PricingEngine.PLATFORM.hashrateCommission = r / 100;
+        const p = PricingEngine.calculatePricing(inputs.volume, inputs.period, inputs.baseElec, inputs.miner);
+        PricingEngine.PLATFORM.hashrateCommission = orig;
+        return p.platform.totalProfit;
+      });
+
+      const ctx = document.getElementById('commChart');
+      if (commChart) commChart.destroy();
+      commChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: rates.map(r => r + '%'),
+          datasets: [{
+            label: '平台利润 ($)',
+            data: profits,
+            backgroundColor: rates.map(r => r === Math.round(inputs.commRate*100) ? '#f59e0b' : 'rgba(245,158,11,0.3)'),
+            borderColor: '#f59e0b', borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', callback: v => '$' + v.toLocaleString() } },
+            x: { grid: { display: false }, ticks: { color: '#9ca3af' } },
+          },
+        }
+      });
+    }
+
+    function updateUnitEcon(inputs) {
+      const tbody = document.getElementById('unitEconBody');
+      const hp = PricingEngine.hashprice();
+      const minerInfo = PricingEngine.getMiner(inputs.miner);
+
+      tbody.innerHTML = PricingEngine.PLATFORM.periods.map(period => {
+        const origComm = PricingEngine.PLATFORM.hashrateCommission;
+        const origElec = PricingEngine.PLATFORM.electricityMarkup;
+        const origPrem = PricingEngine.PLATFORM.minerPremiumBase;
+        PricingEngine.PLATFORM.hashrateCommission = inputs.commRate;
+        PricingEngine.PLATFORM.electricityMarkup = inputs.elecMarkup;
+        PricingEngine.PLATFORM.minerPremiumBase = inputs.minerPremium;
+
+        const p = PricingEngine.calculatePricing(100, period, inputs.baseElec, inputs.miner);
+        const userPricePerTHDay = p.user.hashrateFee / (100 * period);
+        const userElecPerTHDay = p.user.electricityFee / (100 * period);
+        const platProfitPerTHDay = p.platform.totalProfit / (100 * period);
+
+        PricingEngine.PLATFORM.hashrateCommission = origComm;
+        PricingEngine.PLATFORM.electricityMarkup = origElec;
+        PricingEngine.PLATFORM.minerPremiumBase = origPrem;
+
+        return `<tr>
+          <td><strong>${period}天</strong></td>
+          <td class="mono">$${hp.toFixed(4)}</td>
+          <td class="mono green">+${(p.miner.premium*100).toFixed(1)}%</td>
+          <td class="mono">$${p.miner.sellPrice.toFixed(4)}</td>
+          <td class="mono accent">$${userPricePerTHDay.toFixed(4)}</td>
+          <td class="mono">$${userElecPerTHDay.toFixed(4)}</td>
+          <td class="mono">$${(userPricePerTHDay + userElecPerTHDay).toFixed(4)}</td>
+          <td class="mono green">$${platProfitPerTHDay.toFixed(5)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateScaleModel(inputs) {
+      const scales = [1000, 5000, 10000, 50000, 100000, 500000];
+      const tbody = document.getElementById('scaleBody');
+
+      const origComm = PricingEngine.PLATFORM.hashrateCommission;
+      const origElec = PricingEngine.PLATFORM.electricityMarkup;
+      const origPrem = PricingEngine.PLATFORM.minerPremiumBase;
+      PricingEngine.PLATFORM.hashrateCommission = inputs.commRate;
+      PricingEngine.PLATFORM.electricityMarkup = inputs.elecMarkup;
+      PricingEngine.PLATFORM.minerPremiumBase = inputs.minerPremium;
+
+      tbody.innerHTML = scales.map(vol => {
+        const p = PricingEngine.calculatePricing(vol, inputs.period, inputs.baseElec, inputs.miner);
+        const monthRev = p.user.totalCost;
+        const monthPay = p.miner.totalRevenue;
+        const monthElecProfit = p.platform.elecProfit;
+        const monthProfit = p.platform.totalProfit;
+        return `<tr>
+          <td class="mono">${(vol/1000).toFixed(0)}K TH</td>
+          <td class="mono">${PricingEngine.fmt.usd(monthRev)}</td>
+          <td class="mono red">${PricingEngine.fmt.usd(monthPay)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(monthElecProfit)}</td>
+          <td class="mono green">${PricingEngine.fmt.usd(monthProfit)}</td>
+          <td class="mono accent">${PricingEngine.fmt.usd(monthProfit * (365/inputs.period))}</td>
+        </tr>`;
+      }).join('');
+
+      PricingEngine.PLATFORM.hashrateCommission = origComm;
+      PricingEngine.PLATFORM.electricityMarkup = origElec;
+      PricingEngine.PLATFORM.minerPremiumBase = origPrem;
+    }
+
+    function updateGameTheory(p, inputs) {
+      const hp = PricingEngine.hashprice();
+      const minerInfo = PricingEngine.getMiner(inputs.miner);
+      const breakEvenElec = hp / ((minerInfo.efficiency * 24) / 1000);
+
+      document.getElementById('gameTheory').innerHTML = `
+        <div class="three-col">
+          <div style="padding:16px;">
+            <h4 style="color:var(--green);margin-bottom:8px;">Miner 策略</h4>
+            <ul style="list-style:disc;padding-left:20px;color:var(--text-secondary);font-size:0.85rem;line-height:2;">
+              <li>当电费 < $${breakEvenElec.toFixed(3)}/kWh 时自挖盈利</li>
+              <li>出售溢价 +${(p.miner.premium*100).toFixed(1)}%，收入确定性更高</li>
+              <li>长期合约溢价更低但锁定收入</li>
+              <li>大算力享受量折扣但仍优于自挖</li>
+              <li><strong>纳什均衡</strong>：溢价 = 自挖收入波动性的风险溢价</li>
+            </ul>
+          </div>
+          <div style="padding:16px;">
+            <h4 style="color:var(--accent);margin-bottom:8px;">Platform 策略</h4>
+            <ul style="list-style:disc;padding-left:20px;color:var(--text-secondary);font-size:0.85rem;line-height:2;">
+              <li>算力佣金 ${(inputs.commRate*100).toFixed(0)}% — 低于行业平均</li>
+              <li>电费服务费 ${(inputs.elecMarkup*100).toFixed(0)}% — 覆盖运维成本</li>
+              <li>综合有效佣金 ~${(p.platform.profitMargin*100).toFixed(1)}%</li>
+              <li>规模化后固定成本摊薄，利润率上升</li>
+              <li><strong>竞争优势</strong>：透明定价 + 低费率吸引双边</li>
+            </ul>
+          </div>
+          <div style="padding:16px;">
+            <h4 style="color:var(--blue);margin-bottom:8px;">User 策略</h4>
+            <ul style="list-style:disc;padding-left:20px;color:var(--text-secondary);font-size:0.85rem;line-height:2;">
+              <li>盈亏平衡需 BTC 到 ${PricingEngine.fmt.usd(p.user.breakEvenBTC, 0)}</li>
+              <li>实质是 DCA 策略 + 看涨 BTC 期权</li>
+              <li>长期合约单位成本更低</li>
+              <li>牛市中挖矿可能跑赢直接购买</li>
+              <li><strong>决策依据</strong>：BTC 预期涨幅 vs 挖矿溢价成本</li>
+            </ul>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:16px;background:var(--accent-dim);border-radius:var(--radius-lg);font-size:0.9rem;">
+          <strong style="color:var(--accent);">均衡点：</strong>
+          <span style="color:var(--text-secondary);">
+            当矿工溢价 = BTC波动风险溢价（~5%），平台佣金 < 竞品（8% vs 行业10-15%），
+            用户预期BTC涨幅 > ${((p.user.breakEvenBTC/PricingEngine.liveData.btcPrice - 1)*100).toFixed(0)}% 时，三方均有正收益，市场达到均衡。
+          </span>
+        </div>
+      `;
+    }
+
+    // Events
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('change', calculate);
+      el.addEventListener('input', calculate);
+    });
+
+    init();
+  </script>
+</body>
+</html>

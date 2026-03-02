@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Mine - 矿工盈亏计算器</title>
+  <meta name="description" content="矿工挖矿盈亏计算器。输入算力、电费、矿机型号，计算ROI和盈亏平衡点。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="btc-icon">B</div>
+        <span>BTC Mine <span class="highlight">Miner Calc</span></span>
+      </div>
+      <nav class="header-nav">
+        <a href="https://cloud.btcmine.info">Cloud</a>
+        <a href="https://minersell.btcmine.info">Miner Sell</a>
+        <a href="https://user.btcmine.info">User Calc</a>
+        <a href="https://miner.btcmine.info" class="active">Miner Calc</a>
+        <a href="https://cal.btcmine.info">Platform</a>
+        <a href="https://btcmine.info">Analytics</a>
+      </nav>
+      <div class="btc-ticker">
+        <span>BTC</span>
+        <span class="price" id="btcPrice">--</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero fade-in">
+      <h1>Miner Profitability Calculator</h1>
+      <p class="subtitle">输入矿机配置和电费，计算挖矿盈亏、ROI周期和减半影响。</p>
+    </section>
+
+    <!-- Input Panel -->
+    <section class="card fade-in">
+      <div class="card-header">
+        <h2>矿机配置</h2>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>矿机型号</label>
+          <select id="minerSelect">
+            <option value="s21xp" selected>Antminer S21 XP (270TH, 13.5J/TH)</option>
+            <option value="s21xp_hyd">Antminer S21 XP Hyd (473TH, 12.0J/TH)</option>
+            <option value="s21">Antminer S21 (200TH, 17.5J/TH)</option>
+            <option value="s21_plus">Antminer S21+ (220TH, 16.5J/TH)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>矿机数量</label>
+          <input type="number" id="minerCount" value="10" min="1" max="10000">
+        </div>
+        <div class="form-group">
+          <label>电费 ($/kWh)</label>
+          <input type="number" id="elecRate" value="0.06" min="0.01" max="0.30" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>矿机单价 ($)</label>
+          <input type="number" id="minerPrice" value="3875" min="100" step="100">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:8px;">
+        <div class="form-group">
+          <label>BTC 价格预期 ($)</label>
+          <input type="number" id="btcPriceInput" value="67000" min="1000" step="1000">
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">留空使用实时价格</div>
+        </div>
+        <div class="form-group">
+          <label>矿机预计使用寿命（天）</label>
+          <input type="number" id="lifespan" value="1095" min="30" max="3650">
+        </div>
+        <div class="form-group">
+          <label>预期年难度增长率 (%)</label>
+          <input type="number" id="diffGrowth" value="15" min="0" max="100" step="1">
+        </div>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <div class="stats-grid fade-in" style="margin-top:24px;" id="resultsGrid">
+      <div class="stat-card">
+        <div class="label">总算力</div>
+        <div class="value accent" id="totalHashrate">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">总功耗</div>
+        <div class="value" id="totalPower">--</div>
+        <div class="sub">kW</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">日收入</div>
+        <div class="value green" id="dailyRevenue">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">日电费</div>
+        <div class="value red" id="dailyElec">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">日净利润</div>
+        <div class="value" id="dailyProfit">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">月净利润</div>
+        <div class="value" id="monthlyProfit">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">年净利润</div>
+        <div class="value" id="yearlyProfit">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">ROI 天数</div>
+        <div class="value accent" id="roiDays">--</div>
+      </div>
+    </div>
+
+    <!-- Detailed Breakdown -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px;" class="fade-in">
+      <div class="card">
+        <div class="card-header"><h2>成本结构</h2></div>
+        <ul class="breakdown" id="costBreakdown"></ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>收入结构</h2></div>
+        <ul class="breakdown" id="revenueBreakdown"></ul>
+      </div>
+    </div>
+
+    <!-- Sell vs Mine Comparison -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>自挖 vs 出售算力</h2>
+        <span class="badge badge-green">对比</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+        如果您把算力出售到 <a href="https://minersell.btcmine.info">BTC Mine 平台</a>，收益对比如下：
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>时间范围</th><th>自挖收入</th><th>自挖电费</th><th>自挖利润</th><th>出售收入</th><th>差额</th></tr>
+          </thead>
+          <tbody id="sellCompare"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Electricity Sensitivity -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>电费敏感性分析</h2>
+      </div>
+      <div style="height:300px;">
+        <canvas id="elecChart"></canvas>
+      </div>
+    </section>
+
+    <!-- BTC Price Sensitivity -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>BTC 价格敏感性分析</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>BTC 价格</th><th>日收入</th><th>日利润</th><th>月利润</th><th>年利润</th><th>ROI 天数</th></tr>
+          </thead>
+          <tbody id="priceSensitivity"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Halving Impact -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>减半影响分析</h2>
+        <span class="badge badge-red" id="halvingBadge">--</span>
+      </div>
+      <div id="halvingAnalysis"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://btcmine.info">Analytics</a>
+      <a href="https://cloud.btcmine.info">Cloud</a>
+      <a href="https://minersell.btcmine.info">Miner Sell</a>
+    </div>
+    <p>&copy; 2026 BTC Mine. All rights reserved.</p>
+  </footer>
+
+  <script src="/shared/pricing.js"></script>
+  <script>
+    let elecChart = null;
+
+    async function init() {
+      await PricingEngine.fetchBTCPrice();
+      document.getElementById('btcPriceInput').value = PricingEngine.liveData.btcPrice;
+      calculate();
+      setInterval(async () => {
+        await PricingEngine.fetchBTCPrice();
+        document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
+      }, 60000);
+    }
+
+    function getInputs() {
+      const minerKey = document.getElementById('minerSelect').value;
+      const miner = PricingEngine.getMiner(minerKey);
+      const count = parseInt(document.getElementById('minerCount').value) || 1;
+      const elec = parseFloat(document.getElementById('elecRate').value) || 0.06;
+      const price = parseFloat(document.getElementById('minerPrice').value) || miner.price;
+      const btcPrice = parseFloat(document.getElementById('btcPriceInput').value) || PricingEngine.liveData.btcPrice;
+      const lifespan = parseInt(document.getElementById('lifespan').value) || 1095;
+      const diffGrowth = parseFloat(document.getElementById('diffGrowth').value) / 100 || 0.15;
+      const totalTH = miner.hashrate * count;
+      const totalWatts = miner.power * count;
+      const totalInvestment = price * count;
+      return { minerKey, miner, count, elec, price, btcPrice, lifespan, diffGrowth, totalTH, totalWatts, totalInvestment };
+    }
+
+    function calculate() {
+      const i = getInputs();
+      const hp = PricingEngine.hashprice(i.btcPrice);
+      const dailyBTC = PricingEngine.dailyBTCPerTH() * i.totalTH;
+      const dailyRevenue = dailyBTC * i.btcPrice;
+      const dailyElec = (i.totalWatts / 1000) * 24 * i.elec;
+      const dailyProfit = dailyRevenue - dailyElec;
+      const roiDays = dailyProfit > 0 ? Math.ceil(i.totalInvestment / dailyProfit) : Infinity;
+
+      // Stats
+      document.getElementById('btcPrice').textContent = '$' + i.btcPrice.toLocaleString();
+      document.getElementById('totalHashrate').textContent = (i.totalTH / 1000).toFixed(1) + ' PH/s';
+      document.getElementById('totalPower').textContent = (i.totalWatts / 1000).toFixed(1);
+      document.getElementById('dailyRevenue').textContent = PricingEngine.fmt.usd(dailyRevenue);
+      document.getElementById('dailyElec').textContent = PricingEngine.fmt.usd(dailyElec);
+
+      const dpEl = document.getElementById('dailyProfit');
+      dpEl.textContent = PricingEngine.fmt.usd(dailyProfit);
+      dpEl.className = 'value ' + (dailyProfit >= 0 ? 'green' : 'red');
+
+      const mpEl = document.getElementById('monthlyProfit');
+      mpEl.textContent = PricingEngine.fmt.usd(dailyProfit * 30);
+      mpEl.className = 'value ' + (dailyProfit >= 0 ? 'green' : 'red');
+
+      const ypEl = document.getElementById('yearlyProfit');
+      ypEl.textContent = PricingEngine.fmt.usd(dailyProfit * 365);
+      ypEl.className = 'value ' + (dailyProfit >= 0 ? 'green' : 'red');
+
+      document.getElementById('roiDays').textContent = roiDays === Infinity ? 'N/A' : roiDays.toLocaleString();
+
+      // Cost breakdown
+      const dailyDeprec = i.totalInvestment / i.lifespan;
+      document.getElementById('costBreakdown').innerHTML = `
+        <li><span class="label">矿机投资</span><span class="val">${PricingEngine.fmt.usd(i.totalInvestment)}</span></li>
+        <li><span class="label">日折旧</span><span class="val">${PricingEngine.fmt.usd(dailyDeprec)}</span></li>
+        <li><span class="label">日电费 (${i.totalWatts}W × 24h × $${i.elec})</span><span class="val">${PricingEngine.fmt.usd(dailyElec)}</span></li>
+        <li><span class="label">日总成本（含折旧）</span><span class="val">${PricingEngine.fmt.usd(dailyElec + dailyDeprec)}</span></li>
+        <li><span class="label">月总成本</span><span class="val">${PricingEngine.fmt.usd((dailyElec + dailyDeprec) * 30)}</span></li>
+      `;
+
+      // Revenue breakdown
+      document.getElementById('revenueBreakdown').innerHTML = `
+        <li><span class="label">Hashprice</span><span class="val">${PricingEngine.fmt.usd(hp, 4)} / TH/s / 天</span></li>
+        <li><span class="label">日产 BTC</span><span class="val">${PricingEngine.fmt.btc(dailyBTC)}</span></li>
+        <li><span class="label">日收入</span><span class="val">${PricingEngine.fmt.usd(dailyRevenue)}</span></li>
+        <li><span class="label">利润率</span><span class="val" style="color:${dailyProfit>=0?'var(--green)':'var(--red)'};">${((dailyProfit/dailyRevenue)*100).toFixed(1)}%</span></li>
+        <li><span class="label">盈亏平衡电费</span><span class="val">${PricingEngine.fmt.kwh(dailyRevenue / ((i.totalWatts/1000)*24))}</span></li>
+      `;
+
+      // Sell vs Mine
+      updateSellCompare(i);
+      updateElecChart(i);
+      updatePriceSensitivity(i);
+      updateHalvingAnalysis(i, dailyRevenue, dailyElec);
+    }
+
+    function updateSellCompare(i) {
+      const tbody = document.getElementById('sellCompare');
+      tbody.innerHTML = [30, 90, 180, 360].map(period => {
+        const p = PricingEngine.calculatePricing(i.totalTH, period, i.elec, i.minerKey, i.btcPrice);
+        const selfRev = PricingEngine.hashprice(i.btcPrice) * i.totalTH * period;
+        const selfElec = PricingEngine.electricityCostPerTH(i.elec, i.miner.efficiency) * i.totalTH * period;
+        const selfProfit = selfRev - selfElec;
+        const sellRev = p.miner.totalRevenue;
+        const diff = sellRev - selfProfit;
+        return `<tr>
+          <td><strong>${period} 天</strong></td>
+          <td class="mono">${PricingEngine.fmt.usd(selfRev)}</td>
+          <td class="mono red">${PricingEngine.fmt.usd(selfElec)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(selfProfit)}</td>
+          <td class="mono green">${PricingEngine.fmt.usd(sellRev)}</td>
+          <td class="mono ${diff>=0?'green':'red'}">${diff>=0?'+':''}${PricingEngine.fmt.usd(diff)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateElecChart(i) {
+      const rates = [0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.12, 0.14];
+      const profits = rates.map(r => {
+        const elec = (i.totalWatts / 1000) * 24 * r;
+        const rev = PricingEngine.hashprice(i.btcPrice) * i.totalTH;
+        return rev - elec;
+      });
+
+      const ctx = document.getElementById('elecChart');
+      if (elecChart) elecChart.destroy();
+      elecChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: rates.map(r => '$' + r.toFixed(2)),
+          datasets: [{
+            label: '日利润 ($)',
+            data: profits,
+            backgroundColor: profits.map(p => p >= 0 ? 'rgba(16,185,129,0.6)' : 'rgba(239,68,68,0.6)'),
+            borderColor: profits.map(p => p >= 0 ? '#10b981' : '#ef4444'),
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', callback: v => '$' + v.toFixed(0) } },
+            x: { grid: { display: false }, ticks: { color: '#9ca3af' } },
+          }
+        }
+      });
+    }
+
+    function updatePriceSensitivity(i) {
+      const prices = [30000, 50000, 67000, 80000, 100000, 120000, 150000, 200000];
+      document.getElementById('priceSensitivity').innerHTML = prices.map(price => {
+        const rev = PricingEngine.hashprice(price) * i.totalTH;
+        const elec = (i.totalWatts / 1000) * 24 * i.elec;
+        const profit = rev - elec;
+        const roi = profit > 0 ? Math.ceil(i.totalInvestment / profit) : 'N/A';
+        const cls = profit >= 0 ? 'green' : 'red';
+        return `<tr>
+          <td class="mono">${PricingEngine.fmt.usd(price, 0)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(rev)}</td>
+          <td class="mono ${cls}">${PricingEngine.fmt.usd(profit)}</td>
+          <td class="mono ${cls}">${PricingEngine.fmt.usd(profit * 30)}</td>
+          <td class="mono ${cls}">${PricingEngine.fmt.usd(profit * 365)}</td>
+          <td class="mono">${roi === 'N/A' ? roi : roi.toLocaleString() + ' 天'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateHalvingAnalysis(i, dailyRev, dailyElec) {
+      const halving = PricingEngine.halvingCountdown();
+      document.getElementById('halvingBadge').textContent = halving.daysRemaining + ' 天后减半';
+
+      const postHalvingRev = dailyRev / 2; // 收入减半
+      const postHalvingProfit = postHalvingRev - dailyElec;
+      const preProfit = dailyRev - dailyElec;
+      const preTotal = preProfit * halving.daysRemaining;
+      const breakEvenElec = postHalvingRev / ((i.totalWatts/1000)*24);
+
+      document.getElementById('halvingAnalysis').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div>
+            <h3 style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:12px;">减半前（当前）</h3>
+            <ul class="breakdown">
+              <li><span class="label">日收入</span><span class="val">${PricingEngine.fmt.usd(dailyRev)}</span></li>
+              <li><span class="label">日电费</span><span class="val red">${PricingEngine.fmt.usd(dailyElec)}</span></li>
+              <li><span class="label">日利润</span><span class="val ${preProfit>=0?'green':'red'}">${PricingEngine.fmt.usd(preProfit)}</span></li>
+              <li><span class="label">到减半总利润</span><span class="val">${PricingEngine.fmt.usd(preTotal)}</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:12px;">减半后（区块奖励 1.5625 BTC）</h3>
+            <ul class="breakdown">
+              <li><span class="label">日收入</span><span class="val">${PricingEngine.fmt.usd(postHalvingRev)}</span></li>
+              <li><span class="label">日电费</span><span class="val red">${PricingEngine.fmt.usd(dailyElec)}</span></li>
+              <li><span class="label">日利润</span><span class="val ${postHalvingProfit>=0?'green':'red'}">${PricingEngine.fmt.usd(postHalvingProfit)}</span></li>
+              <li><span class="label">盈亏平衡电费</span><span class="val">${PricingEngine.fmt.kwh(breakEvenElec)}</span></li>
+            </ul>
+          </div>
+        </div>
+        ${postHalvingProfit < 0 ? `
+          <div style="margin-top:16px;padding:12px;background:var(--red-dim);border-radius:var(--radius);font-size:0.9rem;color:var(--red);">
+            ⚠ 按当前 BTC 价格，减半后以 $${i.elec}/kWh 的电费将亏损。需电费低于 ${PricingEngine.fmt.kwh(breakEvenElec)} 或 BTC 价格翻倍才能维持盈利。
+          </div>
+        ` : `
+          <div style="margin-top:16px;padding:12px;background:var(--green-dim);border-radius:var(--radius);font-size:0.9rem;color:var(--green);">
+            减半后仍然盈利！您的低电费优势让您在行业中处于有利位置。
+          </div>
+        `}
+      `;
+    }
+
+    // Bind events
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('change', calculate);
+      el.addEventListener('input', calculate);
+    });
+
+    init();
+  </script>
+</body>
+</html>

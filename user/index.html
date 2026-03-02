@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Mine - 云挖矿 vs 现货对比计算器</title>
+  <meta name="description" content="云挖矿 vs 直接购买 BTC 现货，哪个更划算？输入投资金额一键对比。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .winner-box {
+      padding: 20px; border-radius: var(--radius-xl); text-align: center;
+      margin: 24px 0; font-size: 1.1rem; font-weight: 600;
+    }
+    .winner-box.mining { background: var(--green-dim); border: 2px solid var(--green); color: var(--green); }
+    .winner-box.spot { background: var(--blue-dim); border: 2px solid var(--blue); color: var(--blue); }
+    .winner-box .big { font-size: 2rem; font-weight: 800; font-family: var(--font-mono); }
+    .invest-input {
+      text-align: center; margin: 20px 0;
+    }
+    .invest-input input {
+      font-size: 2rem; text-align: center; max-width: 300px;
+      font-weight: 700; background: var(--bg-input); border: 2px solid var(--accent);
+    }
+    .invest-input label {
+      display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;
+    }
+    .method-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px;
+    }
+    .method-card h3 {
+      font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .method-card h3 .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .dot-mining { background: var(--green); }
+    .dot-spot { background: var(--blue); }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="btc-icon">B</div>
+        <span>BTC Mine <span class="highlight">User Calc</span></span>
+      </div>
+      <nav class="header-nav">
+        <a href="https://cloud.btcmine.info">Cloud</a>
+        <a href="https://minersell.btcmine.info">Miner Sell</a>
+        <a href="https://user.btcmine.info" class="active">User Calc</a>
+        <a href="https://miner.btcmine.info">Miner Calc</a>
+        <a href="https://cal.btcmine.info">Platform</a>
+        <a href="https://btcmine.info">Analytics</a>
+      </nav>
+      <div class="btc-ticker">
+        <span>BTC</span>
+        <span class="price" id="btcPrice">--</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero fade-in">
+      <h1>Cloud Mining vs Spot BTC</h1>
+      <p class="subtitle">投入同样的资金，云挖矿和直接买 BTC 哪个收益更高？一键对比帮你做决策。</p>
+    </section>
+
+    <!-- Investment Input -->
+    <section class="card fade-in">
+      <div class="card-header">
+        <h2>投资参数</h2>
+      </div>
+      <div class="invest-input">
+        <label>投资金额 (USD)</label>
+        <input type="number" id="investAmount" value="1000" min="10" step="100">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>合约期</label>
+          <select id="periodSelect">
+            <option value="30">30 天</option>
+            <option value="90">90 天</option>
+            <option value="180" selected>180 天</option>
+            <option value="270">270 天</option>
+            <option value="360">360 天</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>矿机型号</label>
+          <select id="minerSelect">
+            <option value="s21xp" selected>S21 XP (13.5 J/TH)</option>
+            <option value="s21xp_hyd">S21 XP Hyd (12.0 J/TH)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>电费 ($/kWh)</label>
+          <select id="elecSelect">
+            <option value="0.05">$0.05</option>
+            <option value="0.06" selected>$0.06</option>
+            <option value="0.08">$0.08</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>合约到期 BTC 价格预期</label>
+          <input type="number" id="futureBtcPrice" value="" placeholder="留空=当前价">
+        </div>
+      </div>
+    </section>
+
+    <!-- Winner -->
+    <div class="winner-box" id="winnerBox">
+      计算中...
+    </div>
+
+    <!-- Side by Side Comparison -->
+    <div class="comparison fade-in">
+      <div class="method-card" id="miningCard">
+        <h3><span class="dot dot-mining"></span>云挖矿</h3>
+        <ul class="breakdown" id="miningBreakdown"></ul>
+      </div>
+      <div class="vs">VS</div>
+      <div class="method-card" id="spotCard">
+        <h3><span class="dot dot-spot"></span>直接买 BTC</h3>
+        <ul class="breakdown" id="spotBreakdown"></ul>
+      </div>
+    </div>
+
+    <!-- Price Scenario Chart -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>不同 BTC 价格下的收益对比</h2>
+        <span class="badge badge-purple">情景分析</span>
+      </div>
+      <div style="height:350px;">
+        <canvas id="scenarioChart"></canvas>
+      </div>
+    </section>
+
+    <!-- DCA Simulation -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>云挖矿 = 自动 DCA</h2>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+        云挖矿相当于每天自动购入少量 BTC（Dollar Cost Averaging）。
+        如果 BTC 价格在合约期内波动，DCA 策略可以平滑买入成本。
+      </p>
+      <div class="stats-grid" id="dcaStats">
+        <div class="stat-card">
+          <div class="label">日均获得 BTC</div>
+          <div class="value accent" id="dcaDaily">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">等效日均投入</div>
+          <div class="value" id="dcaDailyUSD">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">合约期总 BTC</div>
+          <div class="value green" id="dcaTotal">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">直接购买 BTC</div>
+          <div class="value blue" id="spotTotal">--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- All Periods Comparison -->
+    <section class="card fade-in" style="margin-top:24px;">
+      <div class="card-header">
+        <h2>全部合约期对比（$1,000 投入）</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>合约期</th>
+              <th>可购算力</th>
+              <th>总产出 BTC</th>
+              <th>产出价值</th>
+              <th>直接买 BTC</th>
+              <th>挖矿/买入比</th>
+              <th>结论</th>
+            </tr>
+          </thead>
+          <tbody id="allPeriodsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin:40px 0;">
+      <a href="https://cloud.btcmine.info" class="btn btn-primary btn-large">
+        前往购买云算力
+      </a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://btcmine.info">Analytics</a>
+      <a href="https://cloud.btcmine.info">Cloud</a>
+      <a href="https://miner.btcmine.info">Miner Calc</a>
+    </div>
+    <p>&copy; 2026 BTC Mine. All rights reserved.</p>
+  </footer>
+
+  <script src="/shared/pricing.js"></script>
+  <script>
+    let chart = null;
+
+    async function init() {
+      await PricingEngine.fetchBTCPrice();
+      calculate();
+      setInterval(async () => {
+        await PricingEngine.fetchBTCPrice();
+        document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
+      }, 60000);
+    }
+
+    function getInputs() {
+      return {
+        invest: parseFloat(document.getElementById('investAmount').value) || 1000,
+        period: parseInt(document.getElementById('periodSelect').value),
+        miner: document.getElementById('minerSelect').value,
+        elec: parseFloat(document.getElementById('elecSelect').value),
+        futureBtc: parseFloat(document.getElementById('futureBtcPrice').value) || PricingEngine.liveData.btcPrice,
+        currentBtc: PricingEngine.liveData.btcPrice,
+      };
+    }
+
+    function calculate() {
+      const i = getInputs();
+      document.getElementById('btcPrice').textContent = '$' + i.currentBtc.toLocaleString();
+
+      // 用户投资金额换算可购买的算力
+      // 先算 10TH/s 的总成本，然后按比例
+      const base = PricingEngine.calculatePricing(10, i.period, i.elec, i.miner);
+      const costPer10TH = base.user.totalCost;
+      const affordableTH = Math.floor((i.invest / costPer10TH) * 10 / 10) * 10; // 向下取整到10的倍数
+      const actualTH = Math.max(affordableTH, 10);
+
+      const p = PricingEngine.calculatePricing(actualTH, i.period, i.elec, i.miner);
+
+      // Cloud mining results
+      const miningBTC = p.network.totalBTC;
+      const miningValueAtFuture = miningBTC * i.futureBtc;
+      const miningCost = p.user.totalCost;
+      const miningROI = (miningValueAtFuture - miningCost) / miningCost;
+
+      // Spot buying results
+      const spotBTC = i.invest / i.currentBtc;
+      const spotValueAtFuture = spotBTC * i.futureBtc;
+      const spotROI = (spotValueAtFuture - i.invest) / i.invest;
+
+      // Winner
+      const winnerBox = document.getElementById('winnerBox');
+      if (miningBTC > spotBTC) {
+        winnerBox.className = 'winner-box mining';
+        winnerBox.innerHTML = `
+          <div>云挖矿获得更多 BTC</div>
+          <div class="big">${PricingEngine.fmt.btc(miningBTC)} vs ${PricingEngine.fmt.btc(spotBTC)}</div>
+          <div style="font-size:0.9rem;margin-top:8px;">云挖矿多获得 ${((miningBTC/spotBTC - 1)*100).toFixed(1)}% 的 BTC</div>
+        `;
+      } else {
+        winnerBox.className = 'winner-box spot';
+        winnerBox.innerHTML = `
+          <div>直接买 BTC 获得更多</div>
+          <div class="big">${PricingEngine.fmt.btc(spotBTC)} vs ${PricingEngine.fmt.btc(miningBTC)}</div>
+          <div style="font-size:0.9rem;margin-top:8px;">直接购买多获得 ${((spotBTC/miningBTC - 1)*100).toFixed(1)}% 的 BTC</div>
+        `;
+      }
+
+      // Mining breakdown
+      document.getElementById('miningBreakdown').innerHTML = `
+        <li><span class="label">投入金额</span><span class="val">${PricingEngine.fmt.usd(miningCost)}</span></li>
+        <li><span class="label">购得算力</span><span class="val">${actualTH} TH/s</span></li>
+        <li><span class="label">合约期</span><span class="val">${i.period} 天</span></li>
+        <li><span class="label">算力费</span><span class="val">${PricingEngine.fmt.usd(p.user.hashrateFee)}</span></li>
+        <li><span class="label">电费/服务费</span><span class="val">${PricingEngine.fmt.usd(p.user.electricityFee)}</span></li>
+        <li><span class="label">产出 BTC</span><span class="val green">${PricingEngine.fmt.btc(miningBTC)}</span></li>
+        <li><span class="label">BTC 当前价值</span><span class="val">${PricingEngine.fmt.usd(miningBTC * i.currentBtc)}</span></li>
+        <li><span class="label">预期价值 (@${PricingEngine.fmt.usd(i.futureBtc,0)})</span><span class="val accent">${PricingEngine.fmt.usd(miningValueAtFuture)}</span></li>
+        <li><span class="label">ROI</span><span class="val ${miningROI>=0?'green':'red'}">${(miningROI*100).toFixed(2)}%</span></li>
+      `;
+
+      // Spot breakdown
+      document.getElementById('spotBreakdown').innerHTML = `
+        <li><span class="label">投入金额</span><span class="val">${PricingEngine.fmt.usd(i.invest)}</span></li>
+        <li><span class="label">买入价</span><span class="val">${PricingEngine.fmt.usd(i.currentBtc, 0)}</span></li>
+        <li><span class="label">获得 BTC</span><span class="val blue">${PricingEngine.fmt.btc(spotBTC)}</span></li>
+        <li><span class="label">持有期</span><span class="val">${i.period} 天</span></li>
+        <li><span class="label">预期价值 (@${PricingEngine.fmt.usd(i.futureBtc,0)})</span><span class="val accent">${PricingEngine.fmt.usd(spotValueAtFuture)}</span></li>
+        <li><span class="label">ROI</span><span class="val ${spotROI>=0?'green':'red'}">${(spotROI*100).toFixed(2)}%</span></li>
+      `;
+
+      // DCA Stats
+      document.getElementById('dcaDaily').textContent = PricingEngine.fmt.btc(miningBTC / i.period);
+      document.getElementById('dcaDailyUSD').textContent = PricingEngine.fmt.usd(miningCost / i.period);
+      document.getElementById('dcaTotal').textContent = PricingEngine.fmt.btc(miningBTC);
+      document.getElementById('spotTotal').textContent = PricingEngine.fmt.btc(spotBTC);
+
+      updateChart(i, actualTH);
+      updateAllPeriods(i);
+    }
+
+    function updateChart(inputs, actualTH) {
+      const prices = [];
+      const base = inputs.currentBtc;
+      for (let mult = 0.3; mult <= 3.0; mult += 0.1) {
+        prices.push(Math.round(base * mult));
+      }
+
+      const miningBTC = PricingEngine.calculatePricing(actualTH, inputs.period, inputs.elec, inputs.miner).network.totalBTC;
+      const miningCost = PricingEngine.calculatePricing(actualTH, inputs.period, inputs.elec, inputs.miner).user.totalCost;
+      const spotBTC = inputs.invest / inputs.currentBtc;
+
+      const miningROIs = prices.map(p => ((miningBTC * p - miningCost) / miningCost) * 100);
+      const spotROIs = prices.map(p => ((spotBTC * p - inputs.invest) / inputs.invest) * 100);
+
+      const ctx = document.getElementById('scenarioChart');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: prices.map(p => '$' + (p/1000).toFixed(0) + 'K'),
+          datasets: [
+            {
+              label: '云挖矿 ROI%',
+              data: miningROIs,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16,185,129,0.1)',
+              fill: true, tension: 0.3, pointRadius: 0,
+            },
+            {
+              label: '直接买 BTC ROI%',
+              data: spotROIs,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,0.1)',
+              fill: true, tension: 0.3, pointRadius: 0,
+            },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { labels: { color: '#9ca3af' } },
+            tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%' } },
+          },
+          scales: {
+            y: {
+              grid: { color: '#1f2937' },
+              ticks: { color: '#9ca3af', callback: v => v + '%' },
+            },
+            x: { grid: { display: false }, ticks: { color: '#9ca3af', maxTicksLimit: 10 } },
+          },
+        }
+      });
+    }
+
+    function updateAllPeriods(inputs) {
+      const fixedInvest = 1000;
+      const tbody = document.getElementById('allPeriodsBody');
+      tbody.innerHTML = PricingEngine.PLATFORM.periods.map(period => {
+        const base = PricingEngine.calculatePricing(10, period, inputs.elec, inputs.miner);
+        const thAfford = Math.max(Math.floor((fixedInvest / base.user.totalCost) * 10 / 10) * 10, 10);
+        const p = PricingEngine.calculatePricing(thAfford, period, inputs.elec, inputs.miner);
+        const miningBTC = p.network.totalBTC;
+        const spotBTC = fixedInvest / inputs.currentBtc;
+        const ratio = miningBTC / spotBTC;
+        const better = ratio >= 1;
+        return `<tr>
+          <td><strong>${period} 天</strong></td>
+          <td class="mono">${thAfford} TH/s</td>
+          <td class="mono">${PricingEngine.fmt.btc(miningBTC)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(miningBTC * inputs.currentBtc)}</td>
+          <td class="mono">${PricingEngine.fmt.btc(spotBTC)}</td>
+          <td class="mono ${better?'green':'red'}">${(ratio*100).toFixed(1)}%</td>
+          <td><span class="badge ${better?'badge-green':'badge-red'}">${better?'挖矿优':'买入优'}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Events
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('change', calculate);
+      el.addEventListener('input', calculate);
+    });
+
+    init();
+  </script>
+</body>
+</html>

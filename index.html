@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Mine - Cloud Hashrate Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="btc-icon">B</div>
+        <span>BTC Mine <span class="highlight">Platform</span></span>
+      </div>
+      <div class="btc-ticker">
+        <span>BTC</span>
+        <span class="price" id="btcPrice">--</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero fade-in">
+      <h1>BTC Mine Cloud Platform</h1>
+      <p class="subtitle">比特币云算力交易平台 — 连接矿工与用户，透明定价，专业运维。</p>
+    </section>
+
+    <div class="contracts-grid fade-in" style="max-width:900px;margin:40px auto;">
+      <a href="https://cloud.btcmine.info" class="contract-card" style="text-decoration:none;">
+        <div class="period" style="font-size:1.5rem;">Cloud</div>
+        <div class="period-label">云算力商城</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">购买比特币云算力<br>30-360天灵活合约<br>10 TH/s 起购</p>
+      </a>
+      <a href="https://minersell.btcmine.info" class="contract-card" style="text-decoration:none;">
+        <div class="period" style="font-size:1.5rem;color:var(--green);">Sell</div>
+        <div class="period-label">矿工出售</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">出售算力获取溢价<br>比自挖多赚 5-7%<br>电费由买方承担</p>
+      </a>
+      <a href="https://user.btcmine.info" class="contract-card" style="text-decoration:none;">
+        <div class="period" style="font-size:1.5rem;color:var(--blue);">User</div>
+        <div class="period-label">用户计算器</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">云挖矿 vs 买现货<br>收益对比分析<br>帮你做决策</p>
+      </a>
+      <a href="https://miner.btcmine.info" class="contract-card" style="text-decoration:none;">
+        <div class="period" style="font-size:1.5rem;color:var(--purple);">Miner</div>
+        <div class="period-label">矿工计算器</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">挖矿盈亏计算<br>ROI & 减半影响<br>电费敏感性分析</p>
+      </a>
+      <a href="https://cal.btcmine.info" class="contract-card" style="text-decoration:none;">
+        <div class="period" style="font-size:1.5rem;color:var(--red);">Cal</div>
+        <div class="period-label">平台模型</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">三方博弈定价<br>平台经济分析<br>佣金率调优</p>
+      </a>
+      <a href="https://btcmine.info" class="contract-card" style="text-decoration:none;">
+        <div class="period" style="font-size:1.5rem;">Analytics</div>
+        <div class="period-label">矿企分析</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);">23家上市矿企<br>财务 & 运营数据<br>AI 情绪分析</p>
+      </a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 BTC Mine. All rights reserved.</p>
+  </footer>
+
+  <script src="/shared/pricing.js"></script>
+  <script>
+    (async () => {
+      await PricingEngine.fetchBTCPrice();
+      document.getElementById('btcPrice').textContent = '$' + PricingEngine.liveData.btcPrice.toLocaleString();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BTC Mine - 矿工算力出售平台</title>
+  <meta name="description" content="矿工在此出售算力获取稳定收入。比自己挖矿多赚5-7%溢价。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    .offer-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px; margin: 24px 0;
+    }
+    .offer-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px; transition: all 0.3s;
+    }
+    .offer-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .offer-card .period-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700; background: var(--green-dim); color: var(--green);
+      margin-bottom: 12px;
+    }
+    .offer-card .offer-price {
+      font-size: 1.8rem; font-weight: 800; font-family: var(--font-mono); color: var(--green);
+    }
+    .offer-card .offer-unit { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+    .offer-card .offer-detail {
+      display: flex; justify-content: space-between; padding: 6px 0;
+      font-size: 0.85rem; border-top: 1px solid var(--border);
+    }
+    .offer-card .offer-detail .label { color: var(--text-muted); }
+    .offer-card .offer-detail .val { font-family: var(--font-mono); }
+    .offer-card .offer-detail .val.green { color: var(--green); }
+    .sell-btn {
+      width: 100%; margin-top: 16px; padding: 12px; font-size: 0.95rem;
+    }
+    .advantage-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px; margin: 24px 0;
+    }
+    .advantage-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px;
+    }
+    .advantage-card .icon { font-size: 2rem; margin-bottom: 12px; }
+    .advantage-card h3 { font-size: 1rem; margin-bottom: 8px; }
+    .advantage-card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+    .miner-config {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px; margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="btc-icon">B</div>
+        <span>BTC Mine <span class="highlight">Miner Sell</span></span>
+      </div>
+      <nav class="header-nav">
+        <a href="https://cloud.btcmine.info">Cloud</a>
+        <a href="https://minersell.btcmine.info" class="active">Miner Sell</a>
+        <a href="https://user.btcmine.info">User Calc</a>
+        <a href="https://miner.btcmine.info">Miner Calc</a>
+        <a href="https://cal.btcmine.info">Platform</a>
+        <a href="https://btcmine.info">Analytics</a>
+      </nav>
+      <div class="btc-ticker">
+        <span>BTC</span>
+        <span class="price" id="btcPrice">--</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero fade-in">
+      <h1>Sell Your Hashrate</h1>
+      <p class="subtitle">出售算力比自挖多赚 5-7% 溢价。收入稳定、电费由买方承担、资金快速回笼。</p>
+    </section>
+
+    <!-- Miner Stats -->
+    <div class="stats-grid fade-in">
+      <div class="stat-card">
+        <div class="label">当前 Hashprice</div>
+        <div class="value accent" id="statHashprice">--</div>
+        <div class="sub">自挖收入 / TH/s / 天</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">平台收购价</div>
+        <div class="value green" id="statBuyPrice">--</div>
+        <div class="sub">出售收入 / TH/s / 天</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">溢价率</div>
+        <div class="value green" id="statPremium">--</div>
+        <div class="sub">比自挖多赚</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">BTC 价格</div>
+        <div class="value" id="statBtcPrice">--</div>
+      </div>
+    </div>
+
+    <!-- Miner Config -->
+    <div class="miner-config fade-in">
+      <h3 style="margin-bottom: 16px;">我的矿机配置</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>矿机型号</label>
+          <select id="minerSelect">
+            <option value="s21xp" selected>Antminer S21 XP (270TH, 13.5J/TH)</option>
+            <option value="s21xp_hyd">Antminer S21 XP Hyd (473TH, 12.0J/TH)</option>
+            <option value="s21">Antminer S21 (200TH, 17.5J/TH)</option>
+            <option value="s21_plus">Antminer S21+ (220TH, 16.5J/TH)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>可出售算力 (TH/s)</label>
+          <input type="number" id="hashrateInput" value="1000" min="10" step="10">
+        </div>
+        <div class="form-group">
+          <label>我的电费 ($/kWh)</label>
+          <input type="number" id="elecInput" value="0.06" min="0.01" max="0.20" step="0.01">
+        </div>
+      </div>
+    </div>
+
+    <!-- Offer Cards -->
+    <section class="card fade-in">
+      <div class="card-header">
+        <h2>当前收购报价</h2>
+        <span class="badge badge-green">实时更新</span>
+      </div>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+        点击即可出售算力。电费由买方承担，您获得纯算力租金收入。
+      </p>
+      <div class="offer-grid" id="offerGrid"></div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="card fade-in" style="margin-top: 24px;">
+      <div class="card-header">
+        <h2>出售 vs 自挖 详细对比</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>合约期</th>
+              <th>自挖总收入</th>
+              <th>自挖电费</th>
+              <th>自挖净利润</th>
+              <th>出售总收入</th>
+              <th>出售净利润</th>
+              <th>额外收益</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Advantages -->
+    <section style="margin-top: 40px;" class="fade-in">
+      <h2 style="font-size: 1.5rem; margin-bottom: 20px; text-align:center;">为什么出售算力？</h2>
+      <div class="advantage-grid">
+        <div class="advantage-card">
+          <div class="icon">+5%</div>
+          <h3>稳定溢价</h3>
+          <p>平台收购价比自挖 hashprice 高 5-7%，长期合约还有额外折扣，但总体收入仍然高于自挖。</p>
+        </div>
+        <div class="advantage-card">
+          <div class="icon">$0</div>
+          <h3>电费转嫁</h3>
+          <p>电费由云算力买方承担，您只需提供算力。硬件折旧外的纯利润全部归您。</p>
+        </div>
+        <div class="advantage-card">
+          <div class="icon">24h</div>
+          <h3>快速结算</h3>
+          <p>算力费一次性预付到您的账户，无需等待挖矿收益积累。资金快速回笼，改善现金流。</p>
+        </div>
+        <div class="advantage-card">
+          <div class="icon">0%</div>
+          <h3>降低风险</h3>
+          <p>BTC 价格波动和难度增长的风险转移给买方。您获得确定性的法币/稳定币收入。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://btcmine.info">Analytics</a>
+      <a href="https://cloud.btcmine.info">Cloud</a>
+      <a href="https://miner.btcmine.info">Miner Calc</a>
+      <a href="https://cal.btcmine.info">Platform</a>
+    </div>
+    <p>&copy; 2026 BTC Mine. All rights reserved.</p>
+  </footer>
+
+  <!-- Sell Modal -->
+  <div class="modal-overlay" id="sellModal">
+    <div class="modal">
+      <h2>确认出售算力</h2>
+      <div id="sellSummary"></div>
+      <div style="display:flex;gap:12px;margin-top:24px;">
+        <button class="btn btn-green btn-large" style="flex:1" onclick="confirmSell()">确认出售</button>
+        <button class="btn btn-secondary btn-large" onclick="closeSell()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/shared/pricing.js"></script>
+  <script>
+    let sellPeriod = null;
+
+    async function init() {
+      await PricingEngine.fetchBTCPrice();
+      updateAll();
+      setInterval(async () => {
+        await PricingEngine.fetchBTCPrice();
+        updateAll();
+      }, 60000);
+    }
+
+    function getInputs() {
+      return {
+        miner: document.getElementById('minerSelect').value,
+        hashrate: parseInt(document.getElementById('hashrateInput').value) || 1000,
+        elec: parseFloat(document.getElementById('elecInput').value) || 0.06,
+      };
+    }
+
+    function updateAll() {
+      const { miner, hashrate, elec } = getInputs();
+      const btcPrice = PricingEngine.liveData.btcPrice;
+      const hp = PricingEngine.hashprice();
+
+      // Stats
+      document.getElementById('btcPrice').textContent = '$' + btcPrice.toLocaleString();
+      document.getElementById('statBtcPrice').textContent = '$' + btcPrice.toLocaleString();
+      document.getElementById('statHashprice').textContent = '$' + hp.toFixed(4);
+
+      // 90天合约的矿工收购价作为展示
+      const p90 = PricingEngine.calculatePricing(hashrate, 90, elec, miner);
+      document.getElementById('statBuyPrice').textContent = '$' + p90.miner.sellPrice.toFixed(4);
+      document.getElementById('statPremium').textContent = '+' + (p90.miner.premium * 100).toFixed(1) + '%';
+
+      updateOfferCards();
+      updateComparison();
+    }
+
+    function updateOfferCards() {
+      const { miner, hashrate, elec } = getInputs();
+      const minerInfo = PricingEngine.getMiner(miner);
+
+      const html = PricingEngine.PLATFORM.periods.map(period => {
+        const p = PricingEngine.calculatePricing(hashrate, period, elec, miner);
+        const selfMiningRevenue = PricingEngine.hashprice() * hashrate * period;
+        const selfMiningElec = PricingEngine.electricityCostPerTH(elec, minerInfo.efficiency) * hashrate * period;
+        const selfMiningProfit = selfMiningRevenue - selfMiningElec;
+
+        const popular = period === 90 ? 'style="border-color:var(--green);"' : '';
+
+        return `
+          <div class="offer-card" ${popular}>
+            <span class="period-badge">${period} 天合约</span>
+            <div class="offer-price">${PricingEngine.fmt.usd(p.miner.sellPrice, 4)}</div>
+            <div class="offer-unit">/ TH/s / 天 (收购价)</div>
+            <div class="offer-detail">
+              <span class="label">您的总收入</span>
+              <span class="val green">${PricingEngine.fmt.usd(p.miner.totalRevenue)}</span>
+            </div>
+            <div class="offer-detail">
+              <span class="label">自挖净利润</span>
+              <span class="val">${PricingEngine.fmt.usd(selfMiningProfit)}</span>
+            </div>
+            <div class="offer-detail">
+              <span class="label">额外收益</span>
+              <span class="val green">+${PricingEngine.fmt.usd(p.miner.extraProfit)}</span>
+            </div>
+            <div class="offer-detail">
+              <span class="label">溢价率</span>
+              <span class="val green">+${(p.miner.premium * 100).toFixed(1)}%</span>
+            </div>
+            <button class="btn btn-green sell-btn" onclick="openSell(${period})">
+              出售 ${hashrate.toLocaleString()} TH/s × ${period}天
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('offerGrid').innerHTML = html;
+    }
+
+    function updateComparison() {
+      const { miner, hashrate, elec } = getInputs();
+      const minerInfo = PricingEngine.getMiner(miner);
+
+      const tbody = document.getElementById('comparisonBody');
+      tbody.innerHTML = PricingEngine.PLATFORM.periods.map(period => {
+        const p = PricingEngine.calculatePricing(hashrate, period, elec, miner);
+        const hp = PricingEngine.hashprice();
+        const selfRevenue = hp * hashrate * period;
+        const selfElec = PricingEngine.electricityCostPerTH(elec, minerInfo.efficiency) * hashrate * period;
+        const selfProfit = selfRevenue - selfElec;
+        // 出售时电费由买方承担，矿工纯赚收购价
+        const sellProfit = p.miner.totalRevenue;
+        const extra = sellProfit - selfProfit;
+
+        return `<tr>
+          <td><strong>${period} 天</strong></td>
+          <td class="mono">${PricingEngine.fmt.usd(selfRevenue)}</td>
+          <td class="mono red">${PricingEngine.fmt.usd(selfElec)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(selfProfit)}</td>
+          <td class="mono green">${PricingEngine.fmt.usd(sellProfit)}</td>
+          <td class="mono green">${PricingEngine.fmt.usd(sellProfit)}</td>
+          <td class="mono green">+${PricingEngine.fmt.usd(extra)} (+${((extra/selfProfit)*100).toFixed(1)}%)</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function openSell(period) {
+      sellPeriod = period;
+      const { miner, hashrate, elec } = getInputs();
+      const p = PricingEngine.calculatePricing(hashrate, period, elec, miner);
+      const minerInfo = PricingEngine.getMiner(miner);
+
+      document.getElementById('sellSummary').innerHTML = `
+        <ul class="breakdown">
+          <li><span class="label">矿机</span><span class="val">${minerInfo.name}</span></li>
+          <li><span class="label">出售算力</span><span class="val">${hashrate.toLocaleString()} TH/s</span></li>
+          <li><span class="label">合约期</span><span class="val">${period} 天</span></li>
+          <li><span class="label">收购单价</span><span class="val">${PricingEngine.fmt.usd(p.miner.sellPrice, 4)} / TH/s / 天</span></li>
+          <li><span class="label">溢价率</span><span class="val" style="color:var(--green);">+${(p.miner.premium * 100).toFixed(1)}%</span></li>
+          <li style="border-top:2px solid var(--border);padding-top:12px;">
+            <span class="label" style="font-size:1.1rem;">总收入</span>
+            <span class="val" style="font-size:1.1rem;color:var(--green);font-weight:800;">
+              ${PricingEngine.fmt.usd(p.miner.totalRevenue)}
+            </span>
+          </li>
+        </ul>
+        <div style="margin-top:16px;padding:12px;background:var(--green-dim);border-radius:var(--radius);font-size:0.85rem;color:var(--green);">
+          电费由买方承担，以上为您的纯收入。资金将在合约确认后 24 小时内到账。
+        </div>
+      `;
+      document.getElementById('sellModal').classList.add('active');
+    }
+
+    function closeSell() {
+      document.getElementById('sellModal').classList.remove('active');
+    }
+
+    function confirmSell() {
+      alert('出售功能开发中，敬请期待！');
+      closeSell();
+    }
+
+    document.getElementById('sellModal').addEventListener('click', function(e) {
+      if (e.target === this) closeSell();
+    });
+
+    // Reactive inputs
+    ['minerSelect', 'hashrateInput', 'elecInput'].forEach(id => {
+      document.getElementById(id).addEventListener('change', updateAll);
+      document.getElementById(id).addEventListener('input', updateAll);
+    });
+
+    init();
+  </script>
+</body>
+</html>
