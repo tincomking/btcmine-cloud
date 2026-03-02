@@ -3,58 +3,440 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BTC Mine - Cloud Hashrate Platform</title>
+  <title>BTC Mine Cloud - 比特币云算力</title>
+  <meta name="description" content="购买比特币云算力，享受专业级挖矿收益。10TH/s起购，30-360天灵活合约。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/shared/style.css">
 </head>
 <body>
   <main class="container">
+    <!-- Hero -->
     <section class="hero fade-in">
-      <h1>BTC Mine Cloud Platform</h1>
-      <p class="subtitle">比特币云算力交易平台 — 连接矿工与用户，透明定价，专业运维。</p>
+      <h1>Bitcoin Cloud Hashrate</h1>
+      <p class="subtitle">购买比特币云算力，享受专业级挖矿收益。无需矿机、无需场地，10 TH/s 起购。</p>
+      <div class="hero-badges">
+        <span class="hero-badge">10 TH/s 起购</span>
+        <span class="hero-badge">30-360 天合约</span>
+        <span class="hero-badge">实时收益追踪</span>
+        <span class="hero-badge">Antminer S21 XP</span>
+      </div>
     </section>
 
-    <div class="contracts-grid fade-in" style="max-width:900px;margin:40px auto;">
-      <a href="https://cloud.btcmine.info" class="contract-card" style="text-decoration:none;">
-        <div class="period" style="font-size:1.5rem;">Cloud</div>
-        <div class="period-label">云算力商城</div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">购买比特币云算力<br>30-360天灵活合约<br>10 TH/s 起购</p>
-      </a>
-      <a href="https://minersell.btcmine.info" class="contract-card" style="text-decoration:none;">
-        <div class="period" style="font-size:1.5rem;color:var(--green);">Sell</div>
-        <div class="period-label">矿工出售</div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">出售算力获取溢价<br>比自挖多赚 5-7%<br>电费由买方承担</p>
-      </a>
-      <a href="https://user.btcmine.info" class="contract-card" style="text-decoration:none;">
-        <div class="period" style="font-size:1.5rem;color:var(--blue);">User</div>
-        <div class="period-label">用户计算器</div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">云挖矿 vs 买现货<br>收益对比分析<br>帮你做决策</p>
-      </a>
-      <a href="https://miner.btcmine.info" class="contract-card" style="text-decoration:none;">
-        <div class="period" style="font-size:1.5rem;color:var(--purple);">Miner</div>
-        <div class="period-label">矿工计算器</div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">挖矿盈亏计算<br>ROI & 减半影响<br>电费敏感性分析</p>
-      </a>
-      <a href="https://cal.btcmine.info" class="contract-card" style="text-decoration:none;">
-        <div class="period" style="font-size:1.5rem;color:var(--red);">Cal</div>
-        <div class="period-label">平台模型</div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">三方博弈定价<br>平台经济分析<br>佣金率调优</p>
-      </a>
-      <a href="https://btcmine.info" class="contract-card" style="text-decoration:none;">
-        <div class="period" style="font-size:1.5rem;">Analytics</div>
-        <div class="period-label">矿企分析</div>
-        <p style="font-size:0.85rem;color:var(--text-secondary);">23家上市矿企<br>财务 & 运营数据<br>AI 情绪分析</p>
-      </a>
+    <!-- Halving Banner -->
+    <div class="halving-banner fade-in">
+      <div class="text">
+        <strong>BTC 减半倒计时</strong> — 区块奖励将从 3.125 BTC 降至 1.5625 BTC
+      </div>
+      <div class="countdown" id="halvingCountdown">--</div>
     </div>
+
+    <!-- Live Stats -->
+    <div class="stats-grid fade-in" id="statsGrid">
+      <div class="stat-card">
+        <div class="label">BTC 价格</div>
+        <div class="value accent" id="statBtcPrice">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Hashprice</div>
+        <div class="value" id="statHashprice">--</div>
+        <div class="sub">USD / TH/s / 天</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">全网算力</div>
+        <div class="value" id="statNetHash">--</div>
+        <div class="sub">EH/s</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">日产 BTC / 10TH</div>
+        <div class="value" id="statDailyBtc">--</div>
+      </div>
+    </div>
+
+    <!-- Contract Selection -->
+    <section class="card fade-in">
+      <div class="card-header">
+        <h2>选择合约</h2>
+        <span class="badge badge-green">实时定价</span>
+      </div>
+
+      <!-- Period Tabs -->
+      <div class="period-tabs" id="periodTabs">
+        <button class="period-tab" data-period="30">30 天</button>
+        <button class="period-tab" data-period="90">90 天</button>
+        <button class="period-tab active" data-period="180">180 天</button>
+        <button class="period-tab" data-period="270">270 天</button>
+        <button class="period-tab" data-period="360">360 天</button>
+      </div>
+
+      <!-- Hashrate Slider -->
+      <div class="hashrate-display">
+        <div class="big" id="hashrateValue">100</div>
+        <div class="unit">TH/s</div>
+      </div>
+      <input type="range" id="hashrateSlider" min="10" max="10000" step="10" value="100">
+      <div class="range-labels">
+        <span>10 TH/s</span>
+        <span>1,000 TH/s</span>
+        <span>5,000 TH/s</span>
+        <span>10,000 TH/s</span>
+      </div>
+
+      <!-- Miner Selection -->
+      <div class="form-row" style="margin-top: 20px;">
+        <div class="form-group">
+          <label>矿机型号</label>
+          <select id="minerSelect">
+            <option value="s21xp" selected>Antminer S21 XP (270TH, 13.5J/TH)</option>
+            <option value="s21xp_hyd">Antminer S21 XP Hyd (473TH, 12.0J/TH)</option>
+            <option value="s21">Antminer S21 (200TH, 17.5J/TH)</option>
+            <option value="s21_plus">Antminer S21+ (220TH, 16.5J/TH)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>电费 ($/kWh)</label>
+          <select id="elecSelect">
+            <option value="0.05">$0.05 (低成本区域)</option>
+            <option value="0.06" selected>$0.06 (标准矿场)</option>
+            <option value="0.07">$0.07 (普通矿场)</option>
+            <option value="0.08">$0.08 (较高成本)</option>
+            <option value="0.10">$0.10 (高成本区域)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Result -->
+    <div class="cost-breakdown fade-in" id="pricingResult">
+      <div class="cost-col">
+        <h3>费用明细</h3>
+        <div class="card">
+          <ul class="breakdown" id="costBreakdown">
+            <li><span class="label">算力费（一次性）</span><span class="val" id="costHashrate">--</span></li>
+            <li><span class="label">日电费/服务费</span><span class="val" id="costElecDaily">--</span></li>
+            <li><span class="label">合约期总电费</span><span class="val" id="costElecTotal">--</span></li>
+            <li><span class="label">总成本</span><span class="val accent" id="costTotal">--</span></li>
+          </ul>
+        </div>
+        <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">
+          * 电费可提前充值，或出账后 3 个工作日内支付
+        </div>
+      </div>
+      <div class="cost-col">
+        <h3>预期收益</h3>
+        <div class="card">
+          <ul class="breakdown" id="revenueBreakdown">
+            <li><span class="label">日产 BTC</span><span class="val" id="revDailyBtc">--</span></li>
+            <li><span class="label">合约期总 BTC</span><span class="val" id="revTotalBtc">--</span></li>
+            <li><span class="label">BTC 当前价值</span><span class="val" id="revBtcValue">--</span></li>
+            <li><span class="label">ROI</span><span class="val" id="revROI">--</span></li>
+          </ul>
+        </div>
+        <div class="result-box" style="margin-top: 16px;">
+          <div class="label">盈亏平衡 BTC 价格</div>
+          <div class="big-number" id="breakEvenPrice">--</div>
+          <div class="label" id="breakEvenPct">需 BTC 上涨 --</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buy Button -->
+    <div style="text-align: center; margin: 32px 0;">
+      <button class="btn btn-primary btn-large" id="buyBtn" onclick="openOrder()">
+        立即购买算力
+      </button>
+    </div>
+
+    <!-- Scenario Analysis -->
+    <section class="card fade-in" style="margin-top: 24px;">
+      <div class="card-header">
+        <h2>BTC 价格情景分析</h2>
+        <span class="badge badge-purple">What If</span>
+      </div>
+      <div class="scenario-grid" id="scenarios"></div>
+    </section>
+
+    <!-- All Contracts Overview -->
+    <section class="card fade-in" style="margin-top: 24px;">
+      <div class="card-header">
+        <h2>全部合约对比</h2>
+        <span class="badge badge-amber">10 TH/s 基准</span>
+      </div>
+      <div class="table-wrap">
+        <table id="contractsTable">
+          <thead>
+            <tr>
+              <th>合约期</th>
+              <th>算力费</th>
+              <th>日电费</th>
+              <th>总成本</th>
+              <th>预期 BTC</th>
+              <th>BTC 价值</th>
+              <th>盈亏平衡价</th>
+              <th>ROI</th>
+            </tr>
+          </thead>
+          <tbody id="contractsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq fade-in">
+      <h2 style="font-size: 1.5rem; margin-bottom: 20px;">常见问题</h2>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">什么是云算力？</div>
+        <div class="faq-a">云算力是指您购买矿场中矿机的算力使用权，无需自购矿机、租场地、接电力，即可参与比特币挖矿。您的算力由专业矿场 7x24 小时运维，产出的 BTC 按您的算力占比分配。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">算力费和电费怎么收？</div>
+        <div class="faq-a">算力费在购买合约时一次性支付，代表您对矿机算力的使用权。电费/服务费按实际运行产生的电力消耗计算，可以提前充值到账户，也可以在出账后 3 个工作日内支付。电费包含 12% 的运维服务费（含设备维护、冷却、监控）。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">最小购买量是多少？</div>
+        <div class="faq-a">最小购买量为 10 TH/s，以 10 TH/s 为单位递增。合约期可选 30天、90天、180天、270天、360天。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">收益如何计算？</div>
+        <div class="faq-a">收益基于您持有的算力占全网算力的比例，乘以每日区块奖励总量计算。当前区块奖励为 3.125 BTC/块，每日约 144 个块。网络难度每 2016 个块（约14天）调整一次，收益会随难度变化而波动。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">云挖矿 vs 直接买 BTC？</div>
+        <div class="faq-a">云挖矿类似于对 BTC 的 DCA（定投）策略，每天持续获得少量 BTC。在牛市中可能跑赢直接购买（因为算力价格相对BTC价格有滞后性），但在熊市或横盘期间直接购买通常更优。详细对比请访问 <a href="https://user.btcmine.info">用户计算器</a>。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">使用什么矿机？</div>
+        <div class="faq-a">我们的矿场主要使用 Bitmain Antminer S21 XP 系列矿机，能效比 13.5 J/TH（风冷）和 12.0 J/TH（液冷），是目前市场上最高效的比特币矿机之一。</div>
+      </div>
+    </section>
   </main>
 
+  <!-- Footer -->
   <footer class="footer">
+    <div class="footer-links">
+      <a href="https://btcmine.info">BTC Mine Analytics</a>
+      <a href="https://cloud.btcmine.info">Cloud Hashrate</a>
+      <a href="https://minersell.btcmine.info">Miner Sell</a>
+      <a href="https://user.btcmine.info">User Calculator</a>
+      <a href="https://miner.btcmine.info">Miner Calculator</a>
+      <a href="https://cal.btcmine.info">Platform Model</a>
+    </div>
     <p>&copy; 2026 BTC Mine. All rights reserved.</p>
   </footer>
 
+  <!-- Order Modal -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal">
+      <h2>确认订单</h2>
+      <div id="orderSummary"></div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button class="btn btn-primary btn-large" style="flex:1" onclick="confirmOrder()">确认购买</button>
+        <button class="btn btn-secondary btn-large" onclick="closeOrder()">取消</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/shared/pricing.js"></script>
   <script src="/shared/nav.js"></script>
-  <script>Nav.render('home');</script>
+  <script>
+    Nav.render('cloud');
+
+    // State
+    let currentPeriod = 180;
+    let currentHashrate = 100;
+    let currentMiner = 's21xp';
+    let currentElec = 0.06;
+    let currentPricing = null;
+
+    // Init
+    async function init() {
+      await PricingEngine.fetchBTCPrice();
+      updateStats();
+      updatePricing();
+      updateContractsTable();
+      updateHalving();
+
+      // Refresh price every 60s
+      setInterval(async () => {
+        await PricingEngine.fetchBTCPrice();
+        updateStats();
+        updatePricing();
+      }, 60000);
+    }
+
+    function updateStats() {
+      const price = PricingEngine.liveData.btcPrice;
+      const hp = PricingEngine.hashprice();
+      const netHash = PricingEngine.liveData.networkHashrateEH;
+      const dailyBtc = PricingEngine.dailyBTCPerTH() * 10;
+
+      document.getElementById('statBtcPrice').textContent = '$' + price.toLocaleString();
+      document.getElementById('statHashprice').textContent = '$' + hp.toFixed(4);
+      document.getElementById('statNetHash').textContent = netHash.toFixed(0);
+      document.getElementById('statDailyBtc').textContent = dailyBtc.toFixed(8);
+    }
+
+    function updatePricing() {
+      const p = PricingEngine.calculatePricing(currentHashrate, currentPeriod, currentElec, currentMiner);
+      currentPricing = p;
+
+      // Cost breakdown
+      document.getElementById('costHashrate').textContent = PricingEngine.fmt.usd(p.user.hashrateFee);
+      document.getElementById('costElecDaily').textContent = PricingEngine.fmt.usd(p.user.electricityFeeDaily);
+      document.getElementById('costElecTotal').textContent = PricingEngine.fmt.usd(p.user.electricityFee);
+      document.getElementById('costTotal').textContent = PricingEngine.fmt.usd(p.user.totalCost);
+
+      // Revenue
+      document.getElementById('revDailyBtc').textContent = PricingEngine.fmt.btc(p.network.dailyBTCTotal);
+      document.getElementById('revTotalBtc').textContent = PricingEngine.fmt.btc(p.network.totalBTC);
+      document.getElementById('revBtcValue').textContent = PricingEngine.fmt.usd(p.network.totalBTCValue);
+
+      const roiPct = p.user.roi * 100;
+      const roiEl = document.getElementById('revROI');
+      roiEl.textContent = roiPct.toFixed(2) + '%';
+      roiEl.className = 'val ' + (roiPct >= 0 ? 'green' : 'red');
+
+      document.getElementById('breakEvenPrice').textContent = PricingEngine.fmt.usd(p.user.breakEvenBTC, 0);
+      const pctNeeded = ((p.user.breakEvenBTC / p.params.btcPrice) - 1) * 100;
+      const pctEl = document.getElementById('breakEvenPct');
+      if (pctNeeded > 0) {
+        pctEl.textContent = '需 BTC 上涨 ' + pctNeeded.toFixed(1) + '%';
+        pctEl.style.color = 'var(--red)';
+      } else {
+        pctEl.textContent = '当前价格已盈利！';
+        pctEl.style.color = 'var(--green)';
+      }
+
+      updateScenarios();
+    }
+
+    function updateScenarios() {
+      const btcPrice = PricingEngine.liveData.btcPrice;
+      const scenarios = [
+        { label: '悲观', cls: 'bearish', price: btcPrice * 0.7 },
+        { label: '中性', cls: 'neutral', price: btcPrice },
+        { label: '乐观', cls: 'bullish', price: btcPrice * 1.5 },
+      ];
+
+      const html = scenarios.map(s => {
+        const p = PricingEngine.calculatePricing(currentHashrate, currentPeriod, currentElec, currentMiner, s.price);
+        const roiPct = (p.user.roi * 100).toFixed(1);
+        const roiColor = p.user.roi >= 0 ? 'var(--green)' : 'var(--red)';
+        return `
+          <div class="scenario-card ${s.cls}">
+            <div class="scenario-label">${s.label}</div>
+            <div style="font-family:var(--font-mono);font-size:1.3rem;font-weight:700;">
+              ${PricingEngine.fmt.usd(s.price, 0)}
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin:4px 0;">BTC 价格</div>
+            <div style="font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:${roiColor};margin-top:8px;">
+              ${roiPct}%
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">ROI</div>
+            <div style="font-family:var(--font-mono);font-size:0.85rem;margin-top:8px;">
+              ${PricingEngine.fmt.btc(p.network.totalBTC)}
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">产出 BTC</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('scenarios').innerHTML = html;
+    }
+
+    function updateContractsTable() {
+      const all = PricingEngine.calculateAllPeriods(10, currentElec, currentMiner);
+      const tbody = document.getElementById('contractsBody');
+      tbody.innerHTML = all.map(p => {
+        const roiPct = (p.user.roi * 100).toFixed(2);
+        const roiCls = p.user.roi >= 0 ? 'green' : 'red';
+        return `<tr>
+          <td><strong>${p.params.period} 天</strong></td>
+          <td class="mono">${PricingEngine.fmt.usd(p.user.hashrateFee)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(p.user.electricityFeeDaily)}</td>
+          <td class="mono accent">${PricingEngine.fmt.usd(p.user.totalCost)}</td>
+          <td class="mono">${PricingEngine.fmt.btc(p.network.totalBTC)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(p.network.totalBTCValue)}</td>
+          <td class="mono">${PricingEngine.fmt.usd(p.user.breakEvenBTC, 0)}</td>
+          <td class="mono ${roiCls}">${roiPct}%</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateHalving() {
+      const h = PricingEngine.halvingCountdown();
+      document.getElementById('halvingCountdown').textContent = `${h.daysRemaining} 天 ${h.hours} 小时`;
+    }
+
+    // Event Handlers
+    document.querySelectorAll('.period-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentPeriod = parseInt(this.dataset.period);
+        updatePricing();
+      });
+    });
+
+    document.getElementById('hashrateSlider').addEventListener('input', function() {
+      currentHashrate = parseInt(this.value);
+      document.getElementById('hashrateValue').textContent = currentHashrate.toLocaleString();
+      updatePricing();
+    });
+
+    document.getElementById('minerSelect').addEventListener('change', function() {
+      currentMiner = this.value;
+      updatePricing();
+      updateContractsTable();
+    });
+
+    document.getElementById('elecSelect').addEventListener('change', function() {
+      currentElec = parseFloat(this.value);
+      updatePricing();
+      updateContractsTable();
+    });
+
+    // Order Modal
+    function openOrder() {
+      if (!currentPricing) return;
+      const p = currentPricing;
+      const miner = PricingEngine.getMiner(currentMiner);
+      document.getElementById('orderSummary').innerHTML = `
+        <ul class="breakdown">
+          <li><span class="label">算力</span><span class="val">${currentHashrate.toLocaleString()} TH/s</span></li>
+          <li><span class="label">合约期</span><span class="val">${currentPeriod} 天</span></li>
+          <li><span class="label">矿机型号</span><span class="val">${miner.name}</span></li>
+          <li><span class="label">能效比</span><span class="val">${miner.efficiency} J/TH</span></li>
+          <li style="border-top:2px solid var(--border-2);padding-top:12px;">
+            <span class="label">算力费（一次性）</span><span class="val accent">${PricingEngine.fmt.usd(p.user.hashrateFee)}</span>
+          </li>
+          <li><span class="label">日电费/服务费</span><span class="val">${PricingEngine.fmt.usd(p.user.electricityFeeDaily)}</span></li>
+          <li><span class="label">合约期总电费</span><span class="val">${PricingEngine.fmt.usd(p.user.electricityFee)}</span></li>
+          <li><span class="label" style="font-size:1.1rem;">合计</span><span class="val accent" style="font-size:1.1rem;">${PricingEngine.fmt.usd(p.user.totalCost)}</span></li>
+        </ul>
+        <div style="margin-top:16px;padding:12px;background:var(--green-dim);border-radius:var(--radius);font-size:0.85rem;color:var(--green);">
+          预计产出 ${PricingEngine.fmt.btc(p.network.totalBTC)}（当前价值 ${PricingEngine.fmt.usd(p.network.totalBTCValue)}）
+        </div>
+      `;
+      document.getElementById('orderModal').classList.add('active');
+    }
+
+    function closeOrder() {
+      document.getElementById('orderModal').classList.remove('active');
+    }
+
+    function confirmOrder() {
+      alert('订单功能开发中，敬请期待！');
+      closeOrder();
+    }
+
+    // Click outside to close modal
+    document.getElementById('orderModal').addEventListener('click', function(e) {
+      if (e.target === this) closeOrder();
+    });
+
+    // Start
+    init();
+  </script>
 </body>
 </html>
