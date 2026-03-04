@@ -10,7 +10,6 @@ const Nav = (() => {
     { id: 'user',      label: 'User Calc',   href: 'https://user.btcmine.info',      local: '/user/' },
     { id: 'miner',     label: 'Miner Calc',  href: 'https://miner.btcmine.info',     local: '/miner/' },
     { id: 'cal',       label: 'Platform',    href: 'https://cal.btcmine.info',       local: '/cal/' },
-    { id: 'gametheory',label: 'Game Theory', href: 'https://gametheory.btcmine.info', local: '/gametheory/' },
     { id: 'analytics', label: 'Analytics',   href: 'https://btcmine.info',           local: 'https://btcmine.info' },
   ];
 
